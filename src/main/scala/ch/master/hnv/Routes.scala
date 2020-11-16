@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 
-class Routes(val neo4j: Neo4j)(implicit val system: ActorSystem[_]) {
+class Routes(val dataService: DataService)(implicit val system: ActorSystem[_]) {
 
   import JsonFormats._
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -17,20 +17,11 @@ class Routes(val neo4j: Neo4j)(implicit val system: ActorSystem[_]) {
   )
 
   val routes: Route =
-    // pathPrefix("api") {
-      concat(
-        path("hey") {
-          post {
-            entity(as[String]) { _ =>
-              complete("Hey")
-            }
-          }
-        },
-        path("hello") {
-          get {
-            complete(neo4j.hello)
-          }
+    concat(
+      path("hello") {
+        get {
+          complete(dataService.hello)
         }
-      )
-    // }
+      }
+    )
 }

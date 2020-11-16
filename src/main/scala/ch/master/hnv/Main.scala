@@ -37,9 +37,9 @@ object Main {
       sys.env.get("NEO4J_USER"),
       sys.env.get("NEO4J_PASSWORD")
     )
-    val neo4j = (neo4jHost, neo4jUser, neo4jPassword) match {
+    val dataService = (neo4jHost, neo4jUser, neo4jPassword) match {
       case (Some(host), Some(user), Some(password)) =>
-        new Neo4j(host, user, password)
+        new DataService(host, user, password)
       case _ =>
         println("You have to define env variables")
         sys.exit(42)
@@ -49,7 +49,7 @@ object Main {
       // val userRegistryActor = context.spawn(UserRegistry(), "UserRegistryActor")
       //  context.watch(userRegistryActor)
 
-      val routes = new Routes(neo4j)(context.system)
+      val routes = new Routes(dataService)(context.system)
       startHttpServer(routes.routes, context.system)
 
       Behaviors.empty
