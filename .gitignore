@@ -1,0 +1,8 @@
+*.class
+.idea
+target/
+project/project
+.bloop
+.metals
+.vscode
+.env
