@@ -6,7 +6,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 
-class Routes(val dataService: DataService)(implicit val system: ActorSystem[_]) {
+class Routes(val dataService: DataService)(implicit
+    val system: ActorSystem[_]
+) {
 
   import JsonFormats._
   import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._

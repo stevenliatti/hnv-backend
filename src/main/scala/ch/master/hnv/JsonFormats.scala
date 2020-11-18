@@ -3,8 +3,7 @@ package ch.master.hnv
 import ch.master.hnv.Domain._
 import spray.json.DefaultJsonProtocol
 
-/**
-  * Formats definitions to parse JSON with spray
+/** Formats definitions to parse JSON with spray
   */
 object JsonFormats {
   import DefaultJsonProtocol._
