@@ -34,8 +34,10 @@ class Routes(val dataService: DataService)(implicit
           ) { (limitMovie, limitActor, limitActorFriends) =>
             complete(
               (
-                StatusCodes.OK, (limitMovie, limitActor, limitActorFriends) match {
-                  case (Some(lm), Some(la), Some(laf)) => dataService.actors(lm, la, laf)
+                StatusCodes.OK,
+                (limitMovie, limitActor, limitActorFriends) match {
+                  case (Some(lm), Some(la), Some(laf)) =>
+                    dataService.actors(lm, la, laf)
                   case _ => dataService.actors(5, 3, 1)
                 }
               )

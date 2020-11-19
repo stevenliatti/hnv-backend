@@ -51,9 +51,9 @@ object Domain {
     def target: Long
   }
 
-  case class KnowsRelation(source: Long, target: Long, movieId: Long)
+  case class KnowsRelation(source: Long, target: Long, movieId: List[Long])
       extends Relation
-  
+
   case class PlayInRelation(
       source: Long,
       target: Long,
@@ -64,8 +64,19 @@ object Domain {
   case class KnownForRelation(source: Long, target: Long, count: Int)
       extends Relation
 
-  case class BelongsToRelation(source: Long, target: Long)
-      extends Relation
+  case class BelongsToRelation(source: Long, target: Long) extends Relation
+
+  case class Paths(nodes: List[Node], rels: Relationship)
+
+  case class PairIds(one: Long, another: Long) {
+    val pair: Set[Long] = Set.apply(one, another)
+
+    override def equals(obj: Any): Boolean =
+      obj match {
+        case that: PairIds => pair == that.pair
+        case _             => false
+      }
+  }
 
   case class Graph(nodes: List[HnvNode], relationships: List[Relation])
 

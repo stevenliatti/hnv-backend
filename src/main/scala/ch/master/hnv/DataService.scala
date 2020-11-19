@@ -23,13 +23,12 @@ class DataService(host: String, user: String, password: String) {
 
   def hello = "hello"
 
-  case class NodesPair(nodes: List[Node]) {
-    val one = nodes.head
-    val two = nodes.tail.head
-  }
-  case class Paths(nodes: NodesPair, rels: Relationship)
+  def actors(
+      limitMovie: Int,
+      limitActor: Int,
+      limitActorFriends: Int
+  ): Graph = {
 
-  def actors(limitMovie: Int, limitActor: Int, limitActorFriends: Int): Graph = {
     def actorsQuery: Future[List[Paths]] = driver.readSession { session =>
       c"""
         MATCH (m:Movie)
@@ -69,15 +68,21 @@ class DataService(host: String, user: String, password: String) {
     val paths = Await.result(actorsQuery, Duration.Inf)
 
     val neo4jNodes = mutable.Set[Node]()
-    val neo4jRels = mutable.Set[Relationship]()
+    val neo4jRels = mutable.Map[PairIds, List[Long]]()
 
     paths.foreach(path => {
-      val (node1, node2) = (path.nodes.one, path.nodes.two)
-      neo4jNodes.add(node1)
-      neo4jNodes.add(node2)
-
+      neo4jNodes.addAll(path.nodes)
       val rel = path.rels
-      neo4jRels.add(rel)
+      val pairIds = PairIds(rel.startNodeId, rel.endNodeId)
+      val movieId = rel.asMap.get("movieId").asInstanceOf[Long]
+      if (neo4jRels.contains(pairIds)) {
+        neo4jRels.put(
+          pairIds,
+          movieId :: neo4jRels(pairIds)
+        )
+      } else {
+        neo4jRels.put(pairIds, List(movieId))
+      }
     })
 
     val nodes = neo4jNodes
@@ -86,18 +91,11 @@ class DataService(host: String, user: String, password: String) {
       )
       .toList
 
-    val relationships = neo4jRels
-      .map(rel =>
-        KnowsRelation(
-          rel.startNodeId,
-          rel.endNodeId,
-          rel.asMap.get("movieId").asInstanceOf[Long]
-        )
-      )
-      .toList
+    val relationships = neo4jRels.map { case (pairIds, list) =>
+      KnowsRelation(pairIds.one, pairIds.another, list)
+    }.toList
 
     Graph(nodes, relationships)
-
   }
 
   /** Return actors list with KNOWS relationship

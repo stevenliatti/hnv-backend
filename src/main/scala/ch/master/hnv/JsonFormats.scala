@@ -17,8 +17,8 @@ object JsonFormats {
   implicit val movieFormat = jsonFormat12(Movie)
 
   implicit object PropertiesJsonFormat extends RootJsonFormat[Properties] {
-    def read(json: JsValue): Domain.Properties = ???
-    def write(obj: Domain.Properties): JsValue = obj match {
+    def read(json: JsValue): Properties = ???
+    def write(obj: Properties): JsValue = obj match {
       case a: Actor => actorFormat.write(a)
       case g: Genre => genreFormat.write(g)
       case m: Movie => movieFormat.write(m)
@@ -33,16 +33,16 @@ object JsonFormats {
   implicit val playInRelationFormat = jsonFormat4(PlayInRelation)
   implicit val knownForRelationFormat = jsonFormat3(KnownForRelation)
   implicit val belongsToRelationFormat = jsonFormat2(BelongsToRelation)
-  
+
   implicit object RelationJsonFormat extends RootJsonFormat[Relation] {
-    def read(json: JsValue): Domain.Relation = ???
-    def write(obj: Domain.Relation): JsValue = obj match {
+    def read(json: JsValue): Relation = ???
+    def write(obj: Relation): JsValue = obj match {
       case a: BelongsToRelation => belongsToRelationFormat.write(a)
-      case b: KnownForRelation => knownForRelationFormat.write(b)
-      case c: KnowsRelation => knowsRelationFormat.write(c)
-      case d: PlayInRelation => playInRelationFormat.write(d)
+      case b: KnownForRelation  => knownForRelationFormat.write(b)
+      case c: KnowsRelation     => knowsRelationFormat.write(c)
+      case d: PlayInRelation    => playInRelationFormat.write(d)
     }
   }
-  
+
   implicit val graphFormat = jsonFormat2(Graph)
 }
