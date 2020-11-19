@@ -17,9 +17,8 @@ import org.neo4j.driver.types.Node
 import org.neo4j.driver.types.Relationship
 import spray.json.JsonParser
 
-class DataService(host: String, user: String, password: String) {
-  private val driver =
-    GraphDatabase.driver[Future](host, AuthTokens.basic(user, password))
+class DataService(host: String) {
+  private val driver = GraphDatabase.driver[Future](host)
 
   def hello = "hello"
 

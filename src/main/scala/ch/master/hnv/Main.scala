@@ -32,16 +32,13 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    val (neo4jHost, neo4jUser, neo4jPassword) = (
-      sys.env.get("NEO4J_HOST"),
-      sys.env.get("NEO4J_USER"),
-      sys.env.get("NEO4J_PASSWORD")
-    )
-    val dataService = (neo4jHost, neo4jUser, neo4jPassword) match {
-      case (Some(host), Some(user), Some(password)) =>
-        new DataService(host, user, password)
+    val neo4jHost = sys.env.get("NEO4J_HOST")
+    val dataService = neo4jHost match {
+      case Some(host) =>
+        println(s"$host")
+        new DataService(host)
       case _ =>
-        println("You have to define env variables")
+        println("You have to define host env variable")
         sys.exit(42)
     }
 
