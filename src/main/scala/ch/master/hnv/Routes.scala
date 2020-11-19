@@ -22,7 +22,25 @@ class Routes(val dataService: DataService)(implicit
     concat(
       path("hello") {
         get {
-          complete(dataService.hello)
+          complete((StatusCodes.OK, dataService.hello))
+        }
+      },
+      path("") {
+        get {
+          parameters(
+            "limitMovie".as[Int].?,
+            "limitActor".as[Int].?,
+            "limitActorFriends".as[Int].?
+          ) { (limitMovie, limitActor, limitActorFriends) =>
+            complete(
+              (
+                StatusCodes.OK, (limitMovie, limitActor, limitActorFriends) match {
+                  case (Some(lm), Some(la), Some(laf)) => dataService.actors(lm, la, laf)
+                  case _ => dataService.actors(5, 3, 1)
+                }
+              )
+            )
+          }
         }
       }
     )
