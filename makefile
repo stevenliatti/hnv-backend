@@ -12,5 +12,5 @@ show_env:
 	@cat .env
 
 clean:
-	rm -rf *.jar target project/target project/project
+	rm -rf *.jar target project/target project/project .metals .bloop
 
