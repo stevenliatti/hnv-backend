@@ -52,7 +52,7 @@ class DataService(host: String) {
     def nodeToActor(node: Node): Actor = {
       val nm = node.asMap
       Actor(
-        nm.get("id").asInstanceOf[Long],
+        nm.get("tmdbId").asInstanceOf[Long],
         nm.get("name").asInstanceOf[String],
         Some(nm.get("biography").asInstanceOf[String]),
         Some(nm.get("birthday").asInstanceOf[String]),

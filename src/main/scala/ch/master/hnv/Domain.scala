@@ -14,7 +14,7 @@ object Domain {
   case class Credits(cast: List[PlayInMovie])
 
   case class Actor(
-      id: Long,
+      tmdbId: Long,
       name: String,
       biography: Option[String],
       birthday: Option[String],
@@ -26,7 +26,7 @@ object Domain {
   ) extends Properties
 
   case class Movie(
-      id: Long,
+      tmdbId: Long,
       title: String,
       overview: String,
       budget: Long,
@@ -40,7 +40,7 @@ object Domain {
       tagline: Option[String]
   ) extends Properties
 
-  case class Genre(id: Long, name: String) extends Properties
+  case class Genre(tmdbId: Long, name: String) extends Properties
 
   // graph classes
 
