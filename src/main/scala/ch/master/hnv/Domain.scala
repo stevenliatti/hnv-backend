@@ -51,7 +51,7 @@ object Domain {
     def target: Long
   }
 
-  case class KnowsRelation(source: Long, target: Long, movieId: List[Long])
+  case class KnowsRelation(source: Long, target: Long, movieIds: List[Long])
       extends Relation
 
   case class PlayInRelation(

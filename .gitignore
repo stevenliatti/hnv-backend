@@ -6,3 +6,4 @@ project/project
 .metals
 .vscode
 .env
+*.jar
