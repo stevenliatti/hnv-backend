@@ -28,6 +28,10 @@ class DataService(host: String) {
       limitActorFriends: Int
   ): Graph = {
 
+    val lm = if (limitMovie > 20) 20 else limitMovie
+    val la = if (limitActor > 20) 20 else limitActor
+    val laf = if (limitActorFriends > 10) 10 else limitActorFriends
+
     def actorsQuery: Future[List[Paths]] = driver.readSession { session =>
       c"""
         MATCH (m:Movie)
