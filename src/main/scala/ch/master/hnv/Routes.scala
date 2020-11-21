@@ -5,6 +5,10 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+
 
 class Routes(val dataService: DataService)(implicit
     val system: ActorSystem[_]
@@ -18,7 +22,13 @@ class Routes(val dataService: DataService)(implicit
     system.settings.config.getDuration("my-app.routes.ask-timeout")
   )
 
-  val routes: Route =
+  lazy val corsSettings: CorsSettings = CorsSettings.defaultSettings
+    .withAllowedOrigins(HttpOriginMatcher.*)
+    .withAllowedMethods(
+      scala.collection.immutable.Seq(OPTIONS, POST, PUT, GET, DELETE)
+    )
+
+  val routes: Route = cors(corsSettings) {
     concat(
       path("hello") {
         get {
@@ -46,4 +56,5 @@ class Routes(val dataService: DataService)(implicit
         }
       }
     )
+  }
 }

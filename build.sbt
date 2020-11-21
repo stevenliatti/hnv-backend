@@ -21,7 +21,8 @@ lazy val root = (project in file(".")).
       "org.scalatest"     %% "scalatest"                % "3.0.8"         % Test,
 
       "org.neo4j.driver" % "neo4j-java-driver" % "4.1.1",
-      "com.dimafeng" %% "neotypes" % "0.15.1"
+      "com.dimafeng" %% "neotypes" % "0.15.1",
+      "ch.megard" %% "akka-http-cors" % "0.4.2"
     )
   ).settings(
   mainClass in assembly := Some("ch.master.hnv.Main")
