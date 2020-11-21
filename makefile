@@ -13,4 +13,3 @@ show_env:
 
 clean:
 	rm -rf *.jar target project/target project/project .metals .bloop
-
