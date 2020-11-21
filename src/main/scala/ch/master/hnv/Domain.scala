@@ -8,12 +8,15 @@ import org.neo4j.driver.types.{Node, Relationship}
 import java.util.ArrayList
 
 object Domain {
-  trait Properties
+  trait Data {
+    def classes = List("Data")
+  }
 
   case class PlayInMovie(id: Long, character: Option[String], order: Int)
   case class Credits(cast: List[PlayInMovie])
 
   case class Actor(
+      id: Long,
       tmdbId: Long,
       name: String,
       biography: Option[String],
@@ -23,9 +26,12 @@ object Domain {
       place_of_birth: Option[String],
       profile_path: Option[String],
       movie_credits: Option[Credits]
-  ) extends Properties
+  ) extends Data {
+    override def classes: List[String] = List("Actor")
+  }
 
   case class Movie(
+      id: Long,
       tmdbId: Long,
       title: String,
       overview: String,
@@ -38,13 +44,17 @@ object Domain {
       release_date: Option[String],
       runtime: Option[Int],
       tagline: Option[String]
-  ) extends Properties
+  ) extends Data {
+    override def classes: List[String] = List("Movie")
+  }
 
-  case class Genre(tmdbId: Long, name: String) extends Properties
+  case class Genre(id: Long, tmdbId: Long, name: String) extends Data {
+    override def classes: List[String] = List("Genre")
+  }
 
   // graph classes
 
-  case class HnvNode(id: Long, labels: List[String], properties: Properties)
+  case class HnvNode(data: Data)
 
   trait Relation {
     def source: Long
@@ -78,6 +88,8 @@ object Domain {
       }
   }
 
-  case class Graph(nodes: List[HnvNode], relationships: List[Relation])
+  case class RelData(data: Relation)
+
+  case class Graph(nodes: List[HnvNode], edges: List[RelData])
 
 }

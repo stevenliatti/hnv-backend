@@ -56,6 +56,7 @@ class DataService(host: String) {
     def nodeToActor(node: Node): Actor = {
       val nm = node.asMap
       Actor(
+        node.id,
         nm.get("tmdbId").asInstanceOf[Long],
         nm.get("name").asInstanceOf[String],
         Some(nm.get("biography").asInstanceOf[String]),
@@ -90,12 +91,12 @@ class DataService(host: String) {
 
     val nodes = neo4jNodes
       .map(node =>
-        HnvNode(node.id, node.labels.asScala.toList, nodeToActor(node))
+        HnvNode(nodeToActor(node))
       )
       .toList
 
     val relationships = neo4jRels.map { case (pairIds, list) =>
-      KnowsRelation(pairIds.one, pairIds.another, list)
+      RelData(KnowsRelation(pairIds.one, pairIds.another, list))
     }.toList
 
     Graph(nodes, relationships)

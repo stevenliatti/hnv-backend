@@ -10,15 +10,15 @@ import spray.json.JsValue
 object JsonFormats {
   import DefaultJsonProtocol._
 
-  implicit val genreFormat = jsonFormat2(Genre)
+  implicit val genreFormat = jsonFormat3(Genre)
   implicit val playInMovieFormat = jsonFormat3(PlayInMovie)
   implicit val creditFormat = jsonFormat1(Credits)
-  implicit val actorFormat = jsonFormat9(Actor)
-  implicit val movieFormat = jsonFormat12(Movie)
+  implicit val actorFormat = jsonFormat10(Actor)
+  implicit val movieFormat = jsonFormat13(Movie)
 
-  implicit object PropertiesJsonFormat extends RootJsonFormat[Properties] {
-    def read(json: JsValue): Properties = ???
-    def write(obj: Properties): JsValue = obj match {
+  implicit object PropertiesJsonFormat extends RootJsonFormat[Data] {
+    def read(json: JsValue): Data = ???
+    def write(obj: Data): JsValue = obj match {
       case a: Actor => actorFormat.write(a)
       case g: Genre => genreFormat.write(g)
       case m: Movie => movieFormat.write(m)
@@ -27,7 +27,7 @@ object JsonFormats {
 
   // implicit val propertiesFormat = jsonFormat(Properties)
 
-  implicit val hnvNodeFormat = jsonFormat3(HnvNode)
+  implicit val hnvNodeFormat = jsonFormat1(HnvNode)
 
   implicit val knowsRelationFormat = jsonFormat3(KnowsRelation)
   implicit val playInRelationFormat = jsonFormat4(PlayInRelation)
@@ -43,6 +43,8 @@ object JsonFormats {
       case d: PlayInRelation    => playInRelationFormat.write(d)
     }
   }
+
+  implicit val relDataFormat = jsonFormat1(RelData)
 
   implicit val graphFormat = jsonFormat2(Graph)
 }
