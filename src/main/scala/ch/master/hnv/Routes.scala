@@ -8,6 +8,7 @@ import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import akka.http.scaladsl.model.HttpMethods._
 
 
 class Routes(val dataService: DataService)(implicit
