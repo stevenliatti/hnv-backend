@@ -4,7 +4,7 @@ export
 run:
 	sbt run
 
-jar:
+backend.jar: src/* build.sbt project/*.sbt project/build.properties
 	sbt compile && sbt assembly
 	cp target/scala-2.13/backend-hnv-assembly-0.1.jar backend.jar
 
