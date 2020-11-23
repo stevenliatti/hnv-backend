@@ -25,7 +25,11 @@ object Domain {
       gender: String,
       place_of_birth: Option[String],
       profile_path: Option[String],
-      movie_credits: Option[Credits]
+      movie_credits: Option[Credits],
+      knowsDegree: Long,
+      playInDegree: Long,
+      degree: Long,
+      knowsCommunity: Long
   ) extends Data {
     override def classes: List[String] = List("Actor")
   }
@@ -48,7 +52,14 @@ object Domain {
     override def classes: List[String] = List("Movie")
   }
 
-  case class Genre(id: Long, tmdbId: Long, name: String) extends Data {
+  case class Genre(
+      id: Long,
+      tmdbId: Long,
+      name: String,
+      belongsToDegree: Long,
+      knownForDegree: Long,
+      degree: Long
+  ) extends Data {
     override def classes: List[String] = List("Genre")
   }
 

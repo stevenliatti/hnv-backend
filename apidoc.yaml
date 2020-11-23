@@ -73,10 +73,19 @@ components:
         id:
           type: integer
           format: int64
+        knowsCommunity:
+          type: integer
+          format: int64
+        knowsDegree:
+          type: integer
+          format: int64
         name:
           type: string
         place_of_birth:
           type: string
+        playInDegree:
+          type: integer
+          format: int64
         profile_path:
           type: string
         tmdbId:

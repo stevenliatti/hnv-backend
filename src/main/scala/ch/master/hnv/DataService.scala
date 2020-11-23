@@ -65,7 +65,11 @@ class DataService(host: String) {
         nm.get("gender").asInstanceOf[String],
         Some(nm.get("place_of_birth").asInstanceOf[String]),
         Some(nm.get("profile_path").asInstanceOf[String]),
-        None
+        None,
+        nm.get("knowsDegree").asInstanceOf[Long],
+        nm.get("playInDegree").asInstanceOf[Long],
+        nm.get("degree").asInstanceOf[Long],
+        nm.get("knowsCommunity").asInstanceOf[Long]
       )
     }
 
