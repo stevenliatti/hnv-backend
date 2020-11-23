@@ -1,0 +1,103 @@
+openapi: 3.0.0
+info:
+  title: Hollywood Network Analyzer API doc
+  version: 0.1.0
+servers:
+- url: /api
+tags:
+  - name: actors
+    description: Actors routes
+paths:
+  /actors:
+    get:
+      description: Returns actors (and some "actors friends") from the best films according to their revenue
+      parameters:
+        - name: limitMovie
+          in: query
+          description: Optional, max 20 (actually)
+          required: false
+          schema:
+            type: integer
+            default: 5
+        - name: limitActor
+          in: query
+          description: Optional, max 20 (actually)
+          required: false
+          schema:
+            type: integer
+            default: 3
+        - name: limitActorFriends
+          in: query
+          description: Optional, max 10 (actually)
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: A list of actors nodes and their relations. Cytoscape.js format compatible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actors'
+components:
+  schemas:
+    KnowsRelation:
+      type: object
+      properties:
+        movieIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+            description: TMDb movie id
+        source:
+          type: integer
+          format: int64
+          description: Actor id
+        target:
+          type: integer
+          format: int64
+          description: Actor id
+    Actor:
+      type: object
+      properties:
+        biography:
+          type: string
+        birthday:
+          type: string
+        deathday:
+          type: string
+        gender:
+          type: string
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        place_of_birth:
+          type: string
+        profile_path:
+          type: string
+        tmdbId:
+          type: integer
+          format: int64
+
+    Actors:
+      type: object
+      properties:
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/KnowsRelation'
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                $ref: '#/components/schemas/Actor'
+

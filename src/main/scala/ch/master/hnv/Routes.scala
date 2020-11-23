@@ -36,7 +36,10 @@ class Routes(val dataService: DataService)(implicit
           complete((StatusCodes.OK, dataService.hello))
         }
       },
-      path("") {
+      path("apidoc.yaml") {
+        getFromFile("apidoc.yaml")
+      },
+      path("actors") {
         get {
           parameters(
             "limitMovie".as[Int].?,
