@@ -10,8 +10,10 @@ import scala.jdk.CollectionConverters._
 
 import ch.master.hnv.Domain._
 import neotypes.Driver
+import neotypes.implicits.mappers.all._
+import neotypes.implicits.syntax.string._
+import neotypes.implicits.syntax.cypher._
 import neotypes.GraphDatabase
-import neotypes.implicits.all._
 import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.types.Node
 import org.neo4j.driver.types.Relationship
@@ -94,9 +96,7 @@ class DataService(host: String) {
     })
 
     val nodes = neo4jNodes
-      .map(node =>
-        HnvNode(nodeToActor(node))
-      )
+      .map(node => HnvNode(nodeToActor(node)))
       .toList
 
     val relationships = neo4jRels.map { case (pairIds, list) =>
@@ -121,4 +121,42 @@ class DataService(host: String) {
       movies: List[Long]
   ): Graph = ???
 
+  def movie(tmdbId: Long): Option[Movie] = {
+    def movieQuery = driver.readSession { session =>
+      c"""
+        MATCH r=(g:Genre)<--(m:Movie {tmdbId: $tmdbId})<-[pi]-(:Actor) MATCH (c:Country)--(m)
+        RETURN m, collect(distinct g), collect(distinct c), collect(distinct pi)
+      """
+        .query[
+          Option[
+            (Movie, List[Genre], List[ProductionCountries], List[PlayInMovie])
+          ]
+        ]
+        .single(session)
+    }
+
+    Await.result(movieQuery, Duration.Inf) match {
+      case Some((m, gs, cs, pi)) => {
+        Some(
+          Movie(
+            m.id,
+            m.tmdbId,
+            m.title,
+            m.overview,
+            m.budget,
+            m.revenue,
+            gs.sortWith(_.tmdbId < _.tmdbId),
+            Some(Credits(pi.sortWith(_.order < _.order))),
+            m.backdrop_path,
+            m.poster_path,
+            Some(cs.sortWith(_.iso_3166_1 < _.iso_3166_1)),
+            m.release_date,
+            m.runtime,
+            m.tagline
+          )
+        )
+      }
+      case None => None
+    }
+  }
 }

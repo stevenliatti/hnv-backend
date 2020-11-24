@@ -10,11 +10,15 @@ import spray.json.JsValue
 object JsonFormats {
   import DefaultJsonProtocol._
 
+  case class Empty(message: String)
+  implicit val emptyFormat = jsonFormat1(Empty)
+
   implicit val genreFormat = jsonFormat6(Genre)
   implicit val playInMovieFormat = jsonFormat3(PlayInMovie)
   implicit val creditFormat = jsonFormat1(Credits)
+  implicit val productionCoutriesFormat = jsonFormat2(ProductionCountries)
   implicit val actorFormat = jsonFormat14(Actor)
-  implicit val movieFormat = jsonFormat13(Movie)
+  implicit val movieFormat = jsonFormat14(Movie)
 
   implicit object PropertiesJsonFormat extends RootJsonFormat[Data] {
     def read(json: JsValue): Data = ???

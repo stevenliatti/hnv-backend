@@ -34,6 +34,7 @@ object Domain {
     override def classes: List[String] = List("Actor")
   }
 
+  case class ProductionCountries(iso_3166_1: String, name: String)
   case class Movie(
       id: Long,
       tmdbId: Long,
@@ -45,6 +46,7 @@ object Domain {
       credits: Option[Credits],
       backdrop_path: Option[String],
       poster_path: Option[String],
+      production_countries: Option[List[ProductionCountries]],
       release_date: Option[String],
       runtime: Option[Int],
       tagline: Option[String]

@@ -10,7 +10,6 @@ import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import akka.http.scaladsl.model.HttpMethods._
 
-
 class Routes(val dataService: DataService)(implicit
     val system: ActorSystem[_]
 ) {
@@ -56,6 +55,15 @@ class Routes(val dataService: DataService)(implicit
                 }
               )
             )
+          }
+        }
+      },
+      path("movie" / LongNumber) { tmdbId: Long =>
+        get {
+          dataService.movie(tmdbId) match {
+            case Some(movie) => complete((StatusCodes.OK, movie))
+            case None =>
+              complete((StatusCodes.NotFound, Empty("movie not found")))
           }
         }
       }

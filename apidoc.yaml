@@ -7,9 +7,14 @@ servers:
 tags:
   - name: actors
     description: Actors routes
+  - name: movies
+    description: Movies routes
 paths:
   /actors:
     get:
+      tags:
+        - actors
+      summary: actors graph
       description: Returns actors (and some "actors friends") from the best films according to their revenue
       parameters:
         - name: limitMovie
@@ -40,6 +45,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Actors'
+  /movie/{tmdbId}:
+    get:
+      tags:
+        - movies
+      summary: Single movie
+      description: Return movie from given tmdbId with basic infos, credits and genres
+      parameters:
+        - name: tmdbId
+          in: path
+          description: tmdbId
+          required: true
+          example: 11
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: A movie with basic infos, credits and genres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: movie not found
 components:
   schemas:
     KnowsRelation:
@@ -91,6 +128,94 @@ components:
         tmdbId:
           type: integer
           format: int64
+
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tmdbId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        belongsToDegree:
+          type: integer
+          format: int64
+        knownForDegree:
+          type: integer
+          format: int64
+        degree:
+          type: integer
+          format: int64
+
+    PlayInMovie:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        character:
+          type: string
+        order:
+          type: integer
+
+    Credits:
+      type: object
+      properties:
+        cast:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayInMovie'
+
+    ProductionCountries:
+      type: object
+      properties:
+        iso_3166_1:
+          type: string
+        name:
+          type: string
+
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tmdbId:
+          type: integer
+          format: int64
+        title:
+          type: string
+        overview:
+          type: string
+        budget:
+          type: integer
+          format: int64
+        revenue:
+          type: integer
+          format: int64
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/Genre'
+        credits:
+          $ref: '#/components/schemas/Credits'
+        backdrop_path:
+          type: string
+        poster_path:
+          type: string
+        production_countries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductionCountries'
+        release_date:
+          type: string
+        runtime:
+          type: integer
+        tagline:
+          type: string
 
     Actors:
       type: object
