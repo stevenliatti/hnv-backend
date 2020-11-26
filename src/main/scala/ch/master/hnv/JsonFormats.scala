@@ -4,6 +4,7 @@ import ch.master.hnv.Domain._
 import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonFormat
 import spray.json.JsValue
+import spray.json.JsArray
 
 /** Formats definitions to parse JSON with spray
   */
@@ -20,6 +21,13 @@ object JsonFormats {
   implicit val actorFormat = jsonFormat14(Actor)
   implicit val movieFormat = jsonFormat14(Movie)
 
+  implicit object MoviesJsonFormat extends RootJsonFormat[List[Movie]] {
+    override def read(json: JsValue): List[Domain.Movie] = ???
+    override def write(obj: List[Domain.Movie]): JsValue = JsArray(
+      obj.map(m => movieFormat.write(m))
+    )
+  }
+
   implicit object PropertiesJsonFormat extends RootJsonFormat[Data] {
     def read(json: JsValue): Data = ???
     def write(obj: Data): JsValue = obj match {
@@ -28,8 +36,6 @@ object JsonFormats {
       case m: Movie => movieFormat.write(m)
     }
   }
-
-  // implicit val propertiesFormat = jsonFormat(Properties)
 
   implicit val hnvNodeFormat = jsonFormat1(HnvNode)
 

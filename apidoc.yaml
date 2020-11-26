@@ -77,6 +77,34 @@ paths:
                   message:
                     type: string
                     example: movie not found
+  /movies:
+    get:
+      tags:
+        - movies
+      summary: Movies list
+      description: Return movies list from given tmdbIds with basic infos, credits and genres
+      parameters:
+        - name: tmdbIds
+          in: query
+          description: TMDb ids, separated by comma
+          required: true
+          schema:
+            type: string
+            example: 10195,10138,24428
+      responses:
+        '200':
+          description: Movies list with basic infos, credits and genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+        '404':
+          description: Not found
+          content:
+            text/plain:
+              example: Request is missing required query parameter 'tmdbIds'
 components:
   schemas:
     KnowsRelation:

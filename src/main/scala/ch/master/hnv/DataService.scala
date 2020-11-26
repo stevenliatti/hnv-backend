@@ -121,23 +121,22 @@ class DataService(host: String) {
       movies: List[Long]
   ): Graph = ???
 
-  def movie(tmdbId: Long): Option[Movie] = {
-    def movieQuery = driver.readSession { session =>
+  def movies(tmdbIds: List[Long]): List[Movie] = {
+    def moviesQuery = driver.readSession { session =>
       c"""
-        MATCH r=(g:Genre)<--(m:Movie {tmdbId: $tmdbId})<-[pi]-(:Actor) MATCH (c:Country)--(m)
+        MATCH r=(g:Genre)<--(m:Movie)<-[pi]-(:Actor) MATCH (c:Country)--(m)
+        WHERE m.tmdbId IN $tmdbIds
         RETURN m, collect(distinct g), collect(distinct c), collect(distinct pi)
       """
         .query[
-          Option[
-            (Movie, List[Genre], List[ProductionCountries], List[PlayInMovie])
-          ]
+          (Movie, List[Genre], List[ProductionCountries], List[PlayInMovie])
         ]
-        .single(session)
+        .list(session)
     }
-
-    Await.result(movieQuery, Duration.Inf) match {
-      case Some((m, gs, cs, pi)) => {
-        Some(
+    Await
+      .result(moviesQuery, Duration.Inf)
+      .map {
+        case (m, gs, cs, pi) => {
           Movie(
             m.id,
             m.tmdbId,
@@ -154,9 +153,7 @@ class DataService(host: String) {
             m.runtime,
             m.tagline
           )
-        )
+        }
       }
-      case None => None
-    }
   }
 }

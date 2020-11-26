@@ -9,6 +9,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.model.HttpOriginMatcher
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.unmarshalling.PredefinedFromStringUnmarshallers.CsvSeq
 
 class Routes(val dataService: DataService)(implicit
     val system: ActorSystem[_]
@@ -60,10 +61,18 @@ class Routes(val dataService: DataService)(implicit
       },
       path("movie" / LongNumber) { tmdbId: Long =>
         get {
-          dataService.movie(tmdbId) match {
-            case Some(movie) => complete((StatusCodes.OK, movie))
-            case None =>
+          dataService.movies(List(tmdbId)) match {
+            case h :: _ => complete((StatusCodes.OK, h))
+            case Nil =>
               complete((StatusCodes.NotFound, Empty("movie not found")))
+          }
+        }
+      },
+      path("movies") {
+        get {
+          parameters("tmdbIds".as(CsvSeq[String])) { tmdbIds =>
+            val longIds = tmdbIds.map(i => i.toLong).toList
+            complete((StatusCodes.OK, dataService.movies(longIds)))
           }
         }
       }
