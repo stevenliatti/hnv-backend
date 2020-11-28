@@ -1,6 +1,7 @@
 FROM mozilla/sbt as builder
 WORKDIR /builder
-COPY project project
+COPY project/*.sbt project/
+COPY project/build.properties project/
 COPY src src
 COPY build.sbt build.sbt
 RUN sbt compile assembly

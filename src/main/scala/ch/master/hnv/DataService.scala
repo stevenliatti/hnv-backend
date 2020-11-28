@@ -24,6 +24,58 @@ class DataService(host: String) {
 
   def hello = "hello"
 
+  private def nodeToActor(node: Node): Actor = {
+    val nm = node.asMap
+    Actor(
+      node.id,
+      nm.get("tmdbId").asInstanceOf[Long],
+      nm.get("name").asInstanceOf[String],
+      Some(nm.get("biography").asInstanceOf[String]),
+      Some(nm.get("birthday").asInstanceOf[String]),
+      Some(nm.get("deathday").asInstanceOf[String]),
+      nm.get("gender").asInstanceOf[String],
+      Some(nm.get("place_of_birth").asInstanceOf[String]),
+      Some(nm.get("profile_path").asInstanceOf[String]),
+      None,
+      nm.get("knowsDegree").asInstanceOf[Long],
+      nm.get("playInDegree").asInstanceOf[Long],
+      nm.get("degree").asInstanceOf[Long],
+      nm.get("knowsCommunity").asInstanceOf[Long]
+    )
+  }
+
+  private def actorsPathsToGraph(fPaths: Future[List[Paths]]) = {
+    val paths = Await.result(fPaths, Duration.Inf)
+
+    val neo4jNodes = mutable.Set[Node]()
+    val neo4jRels = mutable.Map[PairIds, List[Long]]()
+
+    paths.foreach(path => {
+      neo4jNodes.addAll(path.nodes)
+      val rel = path.rels
+      val pairIds = PairIds(rel.startNodeId, rel.endNodeId)
+      val movieId = rel.asMap.get("movieId").asInstanceOf[Long]
+      if (neo4jRels.contains(pairIds)) {
+        neo4jRels.put(
+          pairIds,
+          movieId :: neo4jRels(pairIds)
+        )
+      } else {
+        neo4jRels.put(pairIds, List(movieId))
+      }
+    })
+
+    val nodes = neo4jNodes
+      .map(node => HnvNode(nodeToActor(node)))
+      .toList
+
+    val relationships = neo4jRels.map { case (pairIds, list) =>
+      RelData(KnowsRelation(pairIds.one, pairIds.another, list))
+    }.toList
+
+    Graph(nodes, relationships)
+  }
+
   def actors(
       limitMovie: Int,
       limitActor: Int,
@@ -55,71 +107,37 @@ class DataService(host: String) {
         .list(session)
     }
 
-    def nodeToActor(node: Node): Actor = {
-      val nm = node.asMap
-      Actor(
-        node.id,
-        nm.get("tmdbId").asInstanceOf[Long],
-        nm.get("name").asInstanceOf[String],
-        Some(nm.get("biography").asInstanceOf[String]),
-        Some(nm.get("birthday").asInstanceOf[String]),
-        Some(nm.get("deathday").asInstanceOf[String]),
-        nm.get("gender").asInstanceOf[String],
-        Some(nm.get("place_of_birth").asInstanceOf[String]),
-        Some(nm.get("profile_path").asInstanceOf[String]),
-        None,
-        nm.get("knowsDegree").asInstanceOf[Long],
-        nm.get("playInDegree").asInstanceOf[Long],
-        nm.get("degree").asInstanceOf[Long],
-        nm.get("knowsCommunity").asInstanceOf[Long]
-      )
-    }
-
-    val paths = Await.result(actorsQuery, Duration.Inf)
-
-    val neo4jNodes = mutable.Set[Node]()
-    val neo4jRels = mutable.Map[PairIds, List[Long]]()
-
-    paths.foreach(path => {
-      neo4jNodes.addAll(path.nodes)
-      val rel = path.rels
-      val pairIds = PairIds(rel.startNodeId, rel.endNodeId)
-      val movieId = rel.asMap.get("movieId").asInstanceOf[Long]
-      if (neo4jRels.contains(pairIds)) {
-        neo4jRels.put(
-          pairIds,
-          movieId :: neo4jRels(pairIds)
-        )
-      } else {
-        neo4jRels.put(pairIds, List(movieId))
-      }
-    })
-
-    val nodes = neo4jNodes
-      .map(node => HnvNode(nodeToActor(node)))
-      .toList
-
-    val relationships = neo4jRels.map { case (pairIds, list) =>
-      RelData(KnowsRelation(pairIds.one, pairIds.another, list))
-    }.toList
-
-    Graph(nodes, relationships)
+    actorsPathsToGraph(actorsQuery)
   }
 
-  /** Return actors list with KNOWS relationship
-    *
-    * @param nb
-    * @param filter
-    * @param sort
-    * @param movies
-    * @return
-    */
-  def actors(
-      nb: Int,
-      filter: String,
-      sort: String,
-      movies: List[Long]
-  ): Graph = ???
+  def friendsOf(actorId: Long, friends: Int, friendsOfFriends: Int) = {
+
+    val f = if (friends > 30) 30 else friends
+    val ff = if (friendsOfFriends > 15) 15 else friendsOfFriends
+
+    def friendsQuery: Future[List[Paths]] = driver.readSession { session =>
+      c"""
+        MATCH (a:Actor {tmdbId: $actorId})
+        WITH a
+        CALL {
+          WITH a MATCH (a)-[KNOWS]-(m)
+          RETURN m ORDER BY m.degree DESC LIMIT $f
+        }
+        CALL {
+          WITH m MATCH (m)-[KNOWS]-(n)
+          RETURN n ORDER BY n.degree DESC LIMIT $ff
+        }
+        WITH (collect(a.tmdbId) + collect(m.tmdbId) + collect(n.tmdbId)) AS actorIds
+        MATCH (c)-[k:KNOWS]-(d)
+        WHERE c.tmdbId IN actorIds AND d.tmdbId IN actorIds
+        RETURN collect(c) AS nodes, k AS rels
+      """
+        .query[Paths]
+        .list(session)
+    }
+
+    actorsPathsToGraph(friendsQuery)
+  }
 
   def movies(tmdbIds: List[Long]): List[Movie] = {
     def moviesQuery = driver.readSession { session =>

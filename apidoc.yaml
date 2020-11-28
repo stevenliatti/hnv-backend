@@ -45,6 +45,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Actors'
+  /friendsOf/{tmdbId}:
+    get:
+      tags:
+        - actors
+      summary: actors and friends graph
+      description: Returns actor, some "actors friends" and some "friends of friends" from given actor tmdbId
+      parameters:
+        - name: tmdbId
+          in: path
+          description: tmdbId
+          required: true
+          example: 3061
+          schema:
+            type: integer
+            format: int64
+        - name: friends
+          in: query
+          description: Optional, max 30 (actually)
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: limitfriendsOfFriendsActor
+          in: query
+          description: Optional, max 15 (actually)
+          required: false
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: A list of actors nodes and their relations. Cytoscape.js format compatible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actors'
   /movie/{tmdbId}:
     get:
       tags:

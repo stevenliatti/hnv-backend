@@ -59,6 +59,25 @@ class Routes(val dataService: DataService)(implicit
           }
         }
       },
+      path("friendsOf" / LongNumber) { tmdbId: Long =>
+        get {
+          parameters(
+            "friends".as[Int].?,
+            "friendsOfFriends".as[Int].?
+          ) { (friends, friendsOfFriends) =>
+            complete(
+              (
+                StatusCodes.OK,
+                (friends, friendsOfFriends) match {
+                  case (Some(f), Some(ff)) =>
+                    dataService.friendsOf(tmdbId, f, ff)
+                  case _ => dataService.friendsOf(tmdbId, 20, 10)
+                }
+              )
+            )
+          }
+        }
+      },
       path("movie" / LongNumber) { tmdbId: Long =>
         get {
           dataService.movies(List(tmdbId)) match {
