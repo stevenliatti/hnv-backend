@@ -20,6 +20,8 @@ object JsonFormats {
   implicit val productionCoutriesFormat = jsonFormat2(ProductionCountries)
   implicit val actorFormat = jsonFormat14(Actor)
   implicit val movieFormat = jsonFormat14(Movie)
+  implicit val resultFormatFormat = jsonFormat3(ResultFormat)
+  implicit val searchResultsFormat = jsonFormat1(SearchResults)
 
   implicit object MoviesJsonFormat extends RootJsonFormat[List[Movie]] {
     override def read(json: JsValue): List[Domain.Movie] = ???

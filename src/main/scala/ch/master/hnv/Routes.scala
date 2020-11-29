@@ -94,6 +94,14 @@ class Routes(val dataService: DataService)(implicit
             complete((StatusCodes.OK, dataService.movies(longIds)))
           }
         }
+      },
+      path("search") {
+        get {
+          parameters("criteria".as[String], "limitActors".as[Int], "limitMovies".as[Int]) { (criteria, limitActors, limitMovies) =>
+            val res = dataService.search(criteria, limitActors, limitMovies)
+            complete((StatusCodes.OK, res))
+          }
+        }
       }
     )
   }

@@ -105,4 +105,9 @@ object Domain {
 
   case class Graph(nodes: List[HnvNode], edges: List[RelData])
 
+  // Cases classes for search
+  case class Result(id: Long, name: String, lbl: List[String])
+  case class ResultFormat(id: Long, name: String, label: String)
+  case class SearchResults(res: List[ResultFormat])
+
 }

@@ -141,6 +141,42 @@ paths:
           content:
             text/plain:
               example: Request is missing required query parameter 'tmdbIds'
+
+  /search:
+    get:
+      tags:
+        - search
+      summary: search results
+      description: Returns actors and movies who match with a given string query
+      parameters:
+        - name: criteria
+          in: query
+          description: String to search
+          required: true
+          schema:
+            type: string
+            default: ""
+        - name: limitActors
+          in: query
+          description: Limit of actors in search results
+          required: true
+          schema:
+            type: integer
+            default: 5
+        - name: limitMovies
+          in: query
+          description: Limit of movies in search results
+          required: true
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: A list of actors and movies that match with the given criteria field
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchResults'
 components:
   schemas:
     KnowsRelation:
@@ -299,3 +335,14 @@ components:
               data:
                 $ref: '#/components/schemas/Actor'
 
+    searchResults:
+      type: object
+      properties:
+        tmdbId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        label:
+          type: string
+          format: int64
