@@ -39,7 +39,7 @@ class Routes(val dataService: DataService)(implicit
       path("apidoc.yaml") {
         getFromFile("apidoc.yaml")
       },
-      path("actors") {
+      path("graph" / "actors") {
         get {
           parameters(
             "limitMovie".as[Int].?,
@@ -59,7 +59,7 @@ class Routes(val dataService: DataService)(implicit
           }
         }
       },
-      path("friendsOf" / LongNumber) { tmdbId: Long =>
+      path("graph" / "friendsOf" / LongNumber) { tmdbId: Long =>
         get {
           parameters(
             "friends".as[Int].?,
@@ -97,7 +97,11 @@ class Routes(val dataService: DataService)(implicit
       },
       path("search") {
         get {
-          parameters("criteria".as[String], "limitActors".as[Int], "limitMovies".as[Int]) { (criteria, limitActors, limitMovies) =>
+          parameters(
+            "criteria".as[String],
+            "limitActors".as[Int],
+            "limitMovies".as[Int]
+          ) { (criteria, limitActors, limitMovies) =>
             val res = dataService.search(criteria, limitActors, limitMovies)
             complete((StatusCodes.OK, res))
           }

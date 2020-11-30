@@ -21,12 +21,19 @@ object JsonFormats {
   implicit val actorFormat = jsonFormat14(Actor)
   implicit val movieFormat = jsonFormat14(Movie)
   implicit val resultFormatFormat = jsonFormat3(ResultFormat)
-  implicit val searchResultsFormat = jsonFormat1(SearchResults)
 
   implicit object MoviesJsonFormat extends RootJsonFormat[List[Movie]] {
-    override def read(json: JsValue): List[Domain.Movie] = ???
-    override def write(obj: List[Domain.Movie]): JsValue = JsArray(
+    override def read(json: JsValue): List[Movie] = ???
+    override def write(obj: List[Movie]): JsValue = JsArray(
       obj.map(m => movieFormat.write(m))
+    )
+  }
+
+  implicit object SearchResultsFormat
+      extends RootJsonFormat[List[ResultFormat]] {
+    override def read(json: JsValue): List[Domain.ResultFormat] = ???
+    override def write(obj: List[Domain.ResultFormat]): JsValue = JsArray(
+      obj.map(m => resultFormatFormat.write(m))
     )
   }
 

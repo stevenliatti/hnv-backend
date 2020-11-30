@@ -107,7 +107,6 @@ object Domain {
 
   // Cases classes for search
   case class Result(id: Long, name: String, lbl: List[String])
-  case class ResultFormat(id: Long, name: String, label: String)
-  case class SearchResults(res: List[ResultFormat])
+  case class ResultFormat(tmdbId: Long, name: String, label: String)
 
 }

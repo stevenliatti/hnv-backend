@@ -175,26 +175,30 @@ class DataService(host: String) {
       }
   }
 
-  def search(criteria: String, limitActors: Int, limitMovies: Int): SearchResults = {
+  def search(
+      criteria: String,
+      limitActors: Int,
+      limitMovies: Int
+  ): List[ResultFormat] = {
 
     def searchActor: Future[List[Result]] = driver.readSession { session =>
       c"""
-      MATCH (a)
-      WHERE toLower(a.name) CONTAINS toLower($criteria)
-      RETURN a.tmdbId as id, a.name as name, labels(a) as lbl
-      LIMIT $limitActors
-    """
+        MATCH (a)
+        WHERE toLower(a.name) CONTAINS toLower($criteria)
+        RETURN a.tmdbId as id, a.name as name, labels(a) as lbl
+        LIMIT $limitActors
+      """
         .query[Result]
         .list(session)
     }
 
     def searchMovie: Future[List[Result]] = driver.readSession { session =>
       c"""
-      MATCH (m)
-      WHERE toLower(m.title) CONTAINS toLower($criteria)
-      RETURN m.tmdbId as id, m.title as name, labels(m) as lbl
-      LIMIT $limitMovies
-    """
+        MATCH (m)
+        WHERE toLower(m.title) CONTAINS toLower($criteria)
+        RETURN m.tmdbId as id, m.title as name, labels(m) as lbl
+        LIMIT $limitMovies
+      """
         .query[Result]
         .list(session)
     }
@@ -203,7 +207,7 @@ class DataService(host: String) {
     val movies = Await.result(searchMovie, Duration.Inf)
     val results = actors ::: movies
 
-    SearchResults(results.map(r => ResultFormat(r.id, r.name, r.lbl.head)))
+    results.map(r => ResultFormat(r.id, r.name, r.lbl.head))
 
   }
 }

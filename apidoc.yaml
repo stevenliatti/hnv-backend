@@ -1,18 +1,21 @@
 openapi: 3.0.0
 info:
-  title: Hollywood Network Analyzer API doc
+  title: Hollywood Network Visualizer API doc
   version: 0.1.0
 servers:
 - url: /api
 tags:
+  - name: graph
+    description: Routes returning graphs (nodes and edges)
   - name: actors
     description: Actors routes
   - name: movies
     description: Movies routes
 paths:
-  /actors:
+  /graph/actors:
     get:
       tags:
+        - graph
         - actors
       summary: actors graph
       description: Returns actors (and some "actors friends") from the best films according to their revenue
@@ -45,9 +48,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Actors'
-  /friendsOf/{tmdbId}:
+  /graph/friendsOf/{tmdbId}:
     get:
       tags:
+        - graph
         - actors
       summary: actors and friends graph
       description: Returns actor, some "actors friends" and some "friends of friends" from given actor tmdbId
@@ -155,7 +159,7 @@ paths:
           required: true
           schema:
             type: string
-            default: ""
+            example: "jack"
         - name: limitActors
           in: query
           description: Limit of actors in search results
@@ -176,7 +180,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/searchResults'
+                $ref: '#/components/schemas/SearchResults'
 components:
   schemas:
     KnowsRelation:
@@ -335,7 +339,7 @@ components:
               data:
                 $ref: '#/components/schemas/Actor'
 
-    searchResults:
+    SearchResults:
       type: object
       properties:
         tmdbId:
@@ -345,4 +349,3 @@ components:
           type: string
         label:
           type: string
-          format: int64
