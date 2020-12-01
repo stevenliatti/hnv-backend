@@ -18,6 +18,8 @@ import org.neo4j.driver.AuthTokens
 import org.neo4j.driver.types.Node
 import org.neo4j.driver.types.Relationship
 import spray.json.JsonParser
+import neotypes.DeferredQuery
+import neotypes.DeferredQueryBuilder
 
 class DataService(host: String) {
   private val driver = GraphDatabase.driver[Future](host)
@@ -77,22 +79,108 @@ class DataService(host: String) {
     Graph(nodes, relationships)
   }
 
+  private def filterMovieDates(
+      movieStartDate: Option[String],
+      movieEndDate: Option[String]
+  ): DeferredQueryBuilder = (movieStartDate, movieEndDate) match {
+    case (Some(start), Some(end)) =>
+      c"""date(m.release_date) >= date($start) AND date(m.release_date) <= date($end)"""
+    case (Some(start), None) =>
+      c"""date(m.release_date) >= date($start)"""
+    case (None, Some(end)) =>
+      c"""date(m.release_date) <= date($end)"""
+    case _ => c""""""
+  }
+
+  private def filterMovieBudget(
+      minBudget: Option[Int],
+      maxBudget: Option[Int]
+  ): DeferredQueryBuilder = (minBudget, maxBudget) match {
+    case (Some(min), Some(max)) => c"""m.budget >= $min AND m.budget <= $max"""
+    case (Some(min), None)      => c"""m.budget >= $min"""
+    case (None, Some(max))      => c"""m.budget <= $max)"""
+    case _                      => c""""""
+  }
+
+  private def filterMovieRevenue(
+      minRevenue: Option[Int],
+      maxRevenue: Option[Int]
+  ): DeferredQueryBuilder = (minRevenue, maxRevenue) match {
+    case (Some(min), Some(max)) =>
+      c"""m.revenue >= $min AND m.revenue <= $max"""
+    case (Some(min), None) => c"""m.revenue >= $min"""
+    case (None, Some(max)) => c"""m.revenue <= $max)"""
+    case _                 => c""""""
+  }
+
+  private def filterMovieRuntime(
+      minRuntime: Option[Int],
+      maxRuntime: Option[Int]
+  ): DeferredQueryBuilder = (minRuntime, maxRuntime) match {
+    case (Some(min), Some(max)) =>
+      c"""m.runtime >= $min AND m.runtime <= $max"""
+    case (Some(min), None) => c"""m.runtime >= $min"""
+    case (None, Some(max)) => c"""m.runtime <= $max)"""
+    case _                 => c""""""
+  }
+
+  private def filterMovieGenres(
+      genres: Option[String]
+  ): DeferredQueryBuilder = genres match {
+    case Some(list) =>
+      c"""WHERE g.name IN [${list
+        .split(",")
+        .toList
+        .map(g => s"'$g'")
+        .mkString(",")}]"""
+    case None => c""""""
+  }
+
+  private def concatFilters(
+      qs: List[DeferredQueryBuilder]
+  ): DeferredQueryBuilder = {
+    val first = qs.head
+    qs.tail.foldLeft(c"""WHERE """ + first)((init, q) => init + s" AND ($q)")
+  }
+
   def actors(
-      limitMovie: Int,
-      limitActor: Int,
-      limitActorFriends: Int
+      limitMovie: Option[Int] = Some(5),
+      limitActor: Option[Int] = Some(3),
+      limitActorFriends: Option[Int] = Some(1),
+      movieStartDate: Option[String] = None,
+      movieEndDate: Option[String] = None,
+      movieMinBudget: Option[Int] = None,
+      movieMaxBudget: Option[Int] = None,
+      movieMinRevenue: Option[Int] = None,
+      movieMaxRevenue: Option[Int] = None,
+      movieMinRuntime: Option[Int] = None,
+      movieMaxRuntime: Option[Int] = None,
+      movieGenres: Option[String] = None
   ): Graph = {
 
-    val lm = if (limitMovie > 20) 20 else limitMovie
-    val la = if (limitActor > 20) 20 else limitActor
-    val laf = if (limitActorFriends > 10) 10 else limitActorFriends
+    val lm = if (limitMovie.get > 20) 20 else limitMovie
+    val la = if (limitActor.get > 20) 20 else limitActor
+    val laf = if (limitActorFriends.get > 10) 10 else limitActorFriends
+
+    val filters = List(
+      filterMovieDates(movieStartDate, movieEndDate),
+      filterMovieBudget(movieMinBudget, movieMaxBudget),
+      filterMovieRevenue(movieMinRevenue, movieMaxRevenue),
+      filterMovieRuntime(movieMinRuntime, movieMaxRuntime)
+    )
 
     def actorsQuery: Future[List[Paths]] = driver.readSession { session =>
-      c"""
-        MATCH (m:Movie)
+      (c"""
+        MATCH (m:Movie)--(g:Genre)
+        """
+        + filterMovieGenres(movieGenres) +
+        c"""
         WITH m ORDER BY m.revenue DESC LIMIT $limitMovie
         CALL {
           WITH m MATCH (m)<-[p]-(a:Actor)
+        """
+        + concatFilters(filters) +
+        c"""
           RETURN a ORDER BY p.order LIMIT $limitActor
         }
         CALL {
@@ -103,7 +191,7 @@ class DataService(host: String) {
         MATCH (c:Actor)-[k2:KNOWS]-(d)
         WHERE c.tmdbId IN actorIds AND d.tmdbId IN actorIds
         RETURN collect(c) AS nodes, k2 AS rels
-      """
+      """)
         .query[Paths]
         .list(session)
     }

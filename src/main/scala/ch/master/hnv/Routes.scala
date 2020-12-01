@@ -44,18 +44,50 @@ class Routes(val dataService: DataService)(implicit
           parameters(
             "limitMovie".as[Int].?,
             "limitActor".as[Int].?,
-            "limitActorFriends".as[Int].?
-          ) { (limitMovie, limitActor, limitActorFriends) =>
-            complete(
-              (
-                StatusCodes.OK,
-                (limitMovie, limitActor, limitActorFriends) match {
-                  case (Some(lm), Some(la), Some(laf)) =>
-                    dataService.actors(lm, la, laf)
-                  case _ => dataService.actors(5, 3, 1)
-                }
+            "limitActorFriends".as[Int].?,
+            "movieStartDate".as[String].?,
+            "movieEndDate".as[String].?,
+            "movieMinBudget".as[Int].?,
+            "movieMaxBudget".as[Int].?,
+            "movieMinRevenue".as[Int].?,
+            "movieMaxRevenue".as[Int].?,
+            "movieMinRuntime".as[Int].?,
+            "movieMaxRuntime".as[Int].?,
+            "movieGenres".as[String].?
+          ) {
+            (
+                limitMovie,
+                limitActor,
+                limitActorFriends,
+                movieStartDate,
+                movieEndDate,
+                movieMinBudget,
+                movieMaxBudget,
+                movieMinRevenue,
+                movieMaxRevenue,
+                movieMinRuntime,
+                movieMaxRuntime,
+                movieGenres
+            ) =>
+              complete(
+                (
+                  StatusCodes.OK,
+                  dataService.actors(
+                    limitMovie,
+                    limitActor,
+                    limitActorFriends,
+                    movieStartDate,
+                    movieEndDate,
+                    movieMinBudget,
+                    movieMaxBudget,
+                    movieMinRevenue,
+                    movieMaxRevenue,
+                    movieMinRuntime,
+                    movieMaxRuntime,
+                    movieGenres
+                  )
+                )
               )
-            )
           }
         }
       },
