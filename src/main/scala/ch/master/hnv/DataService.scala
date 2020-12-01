@@ -40,7 +40,8 @@ class DataService(host: String) {
       nm.get("knowsDegree").asInstanceOf[Long],
       nm.get("playInDegree").asInstanceOf[Long],
       nm.get("degree").asInstanceOf[Long],
-      nm.get("knowsCommunity").asInstanceOf[Long]
+      // TODO try with other communities if needed
+      nm.get("knowsCommunityLouvain").asInstanceOf[Long]
     )
   }
 
