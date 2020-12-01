@@ -184,7 +184,7 @@ class DataService(host: String) {
 
     def searchActor: Future[List[Result]] = driver.readSession { session =>
       c"""
-        MATCH (a)
+        MATCH (a:Actor)
         WHERE toLower(a.name) CONTAINS toLower($criteria)
         RETURN a.tmdbId as id, a.name as name, labels(a) as lbl
         LIMIT $limitActors
@@ -195,7 +195,7 @@ class DataService(host: String) {
 
     def searchMovie: Future[List[Result]] = driver.readSession { session =>
       c"""
-        MATCH (m)
+        MATCH (m:Movie)
         WHERE toLower(m.title) CONTAINS toLower($criteria)
         RETURN m.tmdbId as id, m.title as name, labels(m) as lbl
         LIMIT $limitMovies

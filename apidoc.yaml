@@ -180,7 +180,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SearchResults'
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResults'
 components:
   schemas:
     KnowsRelation:
