@@ -80,67 +80,126 @@ class DataService(host: String) {
   }
 
   private def filterMovieDates(
+      movieLabel: String,
       movieStartDate: Option[String],
       movieEndDate: Option[String]
-  ): DeferredQueryBuilder = (movieStartDate, movieEndDate) match {
+  ): Option[String] = (movieStartDate, movieEndDate) match {
     case (Some(start), Some(end)) =>
-      c"""date(m.release_date) >= date($start) AND date(m.release_date) <= date($end)"""
+      Some(
+        s"date($movieLabel.release_date) >= date('$start') AND date($movieLabel.release_date) <= date('$end')"
+      )
     case (Some(start), None) =>
-      c"""date(m.release_date) >= date($start)"""
+      Some(s"date($movieLabel.release_date) >= date('$start')")
     case (None, Some(end)) =>
-      c"""date(m.release_date) <= date($end)"""
-    case _ => c""""""
+      Some(s"date($movieLabel.release_date) <= date('$end')")
+    case _ => None
   }
 
   private def filterMovieBudget(
+      movieLabel: String,
       minBudget: Option[Int],
       maxBudget: Option[Int]
-  ): DeferredQueryBuilder = (minBudget, maxBudget) match {
-    case (Some(min), Some(max)) => c"""m.budget >= $min AND m.budget <= $max"""
-    case (Some(min), None)      => c"""m.budget >= $min"""
-    case (None, Some(max))      => c"""m.budget <= $max)"""
-    case _                      => c""""""
+  ): Option[String] = (minBudget, maxBudget) match {
+    case (Some(min), Some(max)) =>
+      Some(s"$movieLabel.budget >= $min AND $movieLabel.budget <= $max")
+    case (Some(min), None) => Some(s"$movieLabel.budget >= $min")
+    case (None, Some(max)) => Some(s"$movieLabel.budget <= $max)")
+    case _                 => None
   }
 
   private def filterMovieRevenue(
+      movieLabel: String,
       minRevenue: Option[Int],
       maxRevenue: Option[Int]
-  ): DeferredQueryBuilder = (minRevenue, maxRevenue) match {
+  ): Option[String] = (minRevenue, maxRevenue) match {
     case (Some(min), Some(max)) =>
-      c"""m.revenue >= $min AND m.revenue <= $max"""
-    case (Some(min), None) => c"""m.revenue >= $min"""
-    case (None, Some(max)) => c"""m.revenue <= $max)"""
-    case _                 => c""""""
+      Some(s"$movieLabel.revenue >= $min AND $movieLabel.revenue <= $max")
+    case (Some(min), None) => Some(s"$movieLabel.revenue >= $min")
+    case (None, Some(max)) => Some(s"$movieLabel.revenue <= $max)")
+    case _                 => None
   }
 
   private def filterMovieRuntime(
+      movieLabel: String,
       minRuntime: Option[Int],
       maxRuntime: Option[Int]
-  ): DeferredQueryBuilder = (minRuntime, maxRuntime) match {
+  ): Option[String] = (minRuntime, maxRuntime) match {
     case (Some(min), Some(max)) =>
-      c"""m.runtime >= $min AND m.runtime <= $max"""
-    case (Some(min), None) => c"""m.runtime >= $min"""
-    case (None, Some(max)) => c"""m.runtime <= $max)"""
-    case _                 => c""""""
+      Some(s"$movieLabel.runtime >= $min AND $movieLabel.runtime <= $max")
+    case (Some(min), None) => Some(s"$movieLabel.runtime >= $min")
+    case (None, Some(max)) => Some(s"$movieLabel.runtime <= $max)")
+    case _                 => None
   }
 
   private def filterMovieGenres(
+      genreLabel: String,
       genres: Option[String]
-  ): DeferredQueryBuilder = genres match {
+  ): Option[String] = genres match {
     case Some(list) =>
-      c"""WHERE g.name IN [${list
-        .split(",")
-        .toList
-        .map(g => s"'$g'")
-        .mkString(",")}]"""
-    case None => c""""""
+      Some(
+        s"$genreLabel.name IN [${list.split(",").toList.map(g => s"'$g'").mkString(",")}]"
+      )
+    case None => None
   }
 
+  private def filterActorGender(
+      actorLabel: String,
+      gender: Option[String]
+  ): Option[String] = gender match {
+    case Some(value) => Some(s"$actorLabel.gender = '$value'")
+    case None        => None
+  }
+
+  private def filterActorBirth(
+      actorLabel: String,
+      startBirth: Option[String],
+      endBirth: Option[String]
+  ): Option[String] = (startBirth, endBirth) match {
+    case (Some(start), Some(end)) =>
+      Some(
+        s"date($actorLabel.birthday) >= date('$start') AND date($actorLabel.birthday) <= date('$end')"
+      )
+    case (Some(start), None) =>
+      Some(s"date($actorLabel.birthday) >= date('$start')")
+    case (None, Some(end)) =>
+      Some(s"date($actorLabel.birthday) <= date('$end')")
+    case _ => None
+  }
+
+  private def filterActorDeath(
+      actorLabel: String,
+      startDeath: Option[String],
+      endDeath: Option[String]
+  ): Option[String] = (startDeath, endDeath) match {
+    case (Some(start), Some(end)) =>
+      Some(
+        s"date($actorLabel.deathday) >= date('$start') AND date($actorLabel.deathday) <= date('$end')"
+      )
+    case (Some(start), None) =>
+      Some(s"date($actorLabel.deathday) >= date('$start')")
+    case (None, Some(end)) =>
+      Some(s"date($actorLabel.deathday) <= date('$end')")
+    case _ => None
+  }
+
+  private def filterActorCountryOrigin(
+      actorLabel: String,
+      origin: Option[String]
+  ): Option[String] = None
+
   private def concatFilters(
-      qs: List[DeferredQueryBuilder]
-  ): DeferredQueryBuilder = {
-    val first = qs.head
-    qs.tail.foldLeft(c"""WHERE """ + first)((init, q) => init + s" AND ($q)")
+      someQueries: List[Option[String]]
+  ): Option[String] = {
+    val qs = someQueries.filter(_.isDefined).map(o => o.get)
+    qs match {
+      case Nil => None
+      case head :: tail =>
+        Some(
+          tail.foldLeft(s"WHERE ($head)")((init, q) =>
+            init + s" AND (" + q + s")"
+          )
+        )
+    }
   }
 
   def actors(
@@ -155,45 +214,72 @@ class DataService(host: String) {
       movieMaxRevenue: Option[Int] = None,
       movieMinRuntime: Option[Int] = None,
       movieMaxRuntime: Option[Int] = None,
-      movieGenres: Option[String] = None
+      movieGenres: Option[String] = None,
+      actorGender: Option[String] = None,
+      actorStartBirth: Option[String] = None,
+      actorEndBirth: Option[String] = None,
+      actorStartDeath: Option[String] = None,
+      actorEndDeath: Option[String] = None
+      // actorCountryOrigin: Option[String] = None,
   ): Graph = {
 
-    val lm = if (limitMovie.get > 20) 20 else limitMovie
-    val la = if (limitActor.get > 20) 20 else limitActor
-    val laf = if (limitActorFriends.get > 10) 10 else limitActorFriends
+    val lm = if (limitMovie.getOrElse(5) > 20) 20 else limitMovie.getOrElse(5)
+    val la = if (limitActor.getOrElse(3) > 20) 20 else limitActor.getOrElse(3)
+    val laf =
+      if (limitActorFriends.getOrElse(1) > 10) 10
+      else limitActorFriends.getOrElse(1)
 
-    val filters = List(
-      filterMovieDates(movieStartDate, movieEndDate),
-      filterMovieBudget(movieMinBudget, movieMaxBudget),
-      filterMovieRevenue(movieMinRevenue, movieMaxRevenue),
-      filterMovieRuntime(movieMinRuntime, movieMaxRuntime)
+    val movieFilters = concatFilters(
+      List(
+        filterMovieDates("m", movieStartDate, movieEndDate),
+        filterMovieBudget("m", movieMinBudget, movieMaxBudget),
+        filterMovieRevenue("m", movieMinRevenue, movieMaxRevenue),
+        filterMovieRuntime("m", movieMinRuntime, movieMaxRuntime),
+        filterMovieGenres("g", movieGenres)
+      )
+    )
+
+    val actorFilters = concatFilters(
+      List(
+        filterActorGender("a", actorGender),
+        filterActorBirth("a", actorStartBirth, actorEndBirth),
+        filterActorDeath("a", actorStartDeath, actorEndDeath)
+        // filterActorCountryOrigin("a", actorCountryOrigin)
+      )
+    )
+
+    val actorFilters2 = concatFilters(
+      List(
+        filterActorGender("b", actorGender),
+        filterActorBirth("b", actorStartBirth, actorEndBirth),
+        filterActorDeath("b", actorStartDeath, actorEndDeath)
+        // filterActorCountryOrigin("b", actorCountryOrigin)
+      )
     )
 
     def actorsQuery: Future[List[Paths]] = driver.readSession { session =>
-      (c"""
-        MATCH (m:Movie)--(g:Genre)
-        """
-        + filterMovieGenres(movieGenres) +
-        c"""
-        WITH m ORDER BY m.revenue DESC LIMIT $limitMovie
+      val rest = movieFilters.getOrElse("") +
+        s"""
+        WITH m ORDER BY m.revenue DESC LIMIT $lm
         CALL {
           WITH m MATCH (m)<-[p]-(a:Actor)
-        """
-        + concatFilters(filters) +
-        c"""
-          RETURN a ORDER BY p.order LIMIT $limitActor
+        """ + actorFilters.getOrElse("") +
+        s"""
+          RETURN a ORDER BY p.order LIMIT $la
         }
         CALL {
           WITH a MATCH (a)-[k:KNOWS]-(b)
-          RETURN k,b ORDER BY b.degree DESC LIMIT $limitActorFriends
+        """ + actorFilters2.getOrElse("") +
+        s"""
+          RETURN k,b ORDER BY b.degree DESC LIMIT $laf
         }
         WITH (collect(a.tmdbId) + collect(b.tmdbId)) AS actorIds
         MATCH (c:Actor)-[k2:KNOWS]-(d)
         WHERE c.tmdbId IN actorIds AND d.tmdbId IN actorIds
         RETURN collect(c) AS nodes, k2 AS rels
-      """)
-        .query[Paths]
-        .list(session)
+      """
+      // println("MATCH (m:Movie)--(g:Genre) " + rest)
+      (c"MATCH (m:Movie)--(g:Genre) " + rest).query[Paths].list(session)
     }
 
     actorsPathsToGraph(actorsQuery)

@@ -53,7 +53,13 @@ class Routes(val dataService: DataService)(implicit
             "movieMaxRevenue".as[Int].?,
             "movieMinRuntime".as[Int].?,
             "movieMaxRuntime".as[Int].?,
-            "movieGenres".as[String].?
+            "movieGenres".as[String].?,
+            "actorGender".as[String].?,
+            "actorStartBirth".as[String].?,
+            "actorEndBirth".as[String].?,
+            "actorStartDeath".as[String].?,
+            "actorEndDeath".as[String].?
+            // "actorCountryOrigin".as[String].?
           ) {
             (
                 limitMovie,
@@ -67,7 +73,13 @@ class Routes(val dataService: DataService)(implicit
                 movieMaxRevenue,
                 movieMinRuntime,
                 movieMaxRuntime,
-                movieGenres
+                movieGenres,
+                actorGender,
+                actorStartBirth,
+                actorEndBirth,
+                actorStartDeath,
+                actorEndDeath
+                //actorCountryOrigin
             ) =>
               complete(
                 (
@@ -84,7 +96,13 @@ class Routes(val dataService: DataService)(implicit
                     movieMaxRevenue,
                     movieMinRuntime,
                     movieMaxRuntime,
-                    movieGenres
+                    movieGenres,
+                    actorGender,
+                    actorStartBirth,
+                    actorEndBirth,
+                    actorStartDeath,
+                    actorEndDeath
+                    //actorCountryOrigin
                   )
                 )
               )
