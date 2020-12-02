@@ -251,6 +251,8 @@ paths:
     get:
       tags:
         - search
+        - actors
+        - movies
       summary: search results
       description: Returns actors and movies who match with a given string query
       parameters:
@@ -284,6 +286,47 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SearchResults'
+  /graph/shortestPath/{id1}/{id2}:
+    get:
+      tags:
+        - graph
+        - actors
+      summary: actors graph
+      description: Returns actors (and some "actors friends") from the best films according to their revenue
+      parameters:
+        - name: id1
+          in: path
+          description: Actor TMDb id. Must be different of id2
+          required: true
+          example: 85
+          schema:
+            type: integer
+            format: int64
+        - name: id2
+          in: path
+          description: Actor TMDb id. Must be different of id1
+          required: true
+          example: 287
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: A list of actors nodes and their relations. Cytoscape.js format compatible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actors'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: tmdbIds must be different
 components:
   schemas:
     KnowsRelation:

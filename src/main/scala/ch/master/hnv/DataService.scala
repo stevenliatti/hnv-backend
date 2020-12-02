@@ -295,7 +295,7 @@ class DataService(host: String) {
     actorsPathsToGraph(actorsQuery)
   }
 
-  def friendsOf(actorId: Long, friends: Int, friendsOfFriends: Int) = {
+  def friendsOf(actorId: Long, friends: Int, friendsOfFriends: Int): Graph = {
 
     val f = if (friends > 30) 30 else friends
     val ff = if (friendsOfFriends > 15) 15 else friendsOfFriends
@@ -409,5 +409,42 @@ class DataService(host: String) {
 
     results.map(r => ResultFormat(r.id, r.name, r.lbl.head))
 
+  }
+
+  def shortestPath(actorId1: Long, actorId2: Long): Graph = {
+
+    def shortestPathQuery: Future[(List[Node], List[Relationship])] =
+      driver.readSession { session =>
+        c"""
+          MATCH
+          (a1:Actor {tmdbId: $actorId1}),
+          (a2:Actor {tmdbId: $actorId2}),
+          p = shortestPath((a1)-[:KNOWS*]-(a2))
+          RETURN nodes(p) as nodes, relationships(p) as relationships
+        """.query[(List[Node], List[Relationship])].single(session)
+      }
+
+    val (nodes, relationships) = Await.result(shortestPathQuery, Duration.Inf)
+    val hnvNodes = nodes.map(n => HnvNode(nodeToActor(n)))
+
+    val neo4jRels = mutable.Map[PairIds, List[Long]]()
+    relationships.foreach(r => {
+      val pairIds = PairIds(r.startNodeId, r.endNodeId)
+      val movieId = r.asMap.get("movieId").asInstanceOf[Long]
+      if (neo4jRels.contains(pairIds)) {
+        neo4jRels.put(
+          pairIds,
+          movieId :: neo4jRels(pairIds)
+        )
+      } else {
+        neo4jRels.put(pairIds, List(movieId))
+      }
+    })
+
+    val relations = neo4jRels.map { case (pairIds, list) =>
+      RelData(KnowsRelation(pairIds.one, pairIds.another, list))
+    }.toList
+
+    Graph(hnvNodes, relations)
   }
 }

@@ -156,6 +156,12 @@ class Routes(val dataService: DataService)(implicit
             complete((StatusCodes.OK, res))
           }
         }
+      },
+      path("graph" / "shortestPath" / LongNumber / LongNumber) { (first, second) =>
+        get {
+          if (first != second) complete((StatusCodes.OK, dataService.shortestPath(first, second)))
+          else complete((StatusCodes.BadRequest, Empty("tmdbIds must be different")))
+        }
       }
     )
   }
