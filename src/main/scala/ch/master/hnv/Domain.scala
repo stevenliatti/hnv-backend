@@ -12,7 +12,7 @@ object Domain {
     def classes = List("Data")
   }
 
-  case class PlayInMovie(id: Long, character: Option[String], order: Int)
+  case class PlayInMovie(id: Long, character: Option[String], order: Long)
   case class Credits(cast: List[PlayInMovie])
 
   case class Actor(
@@ -53,6 +53,8 @@ object Domain {
   ) extends Data {
     override def classes: List[String] = List("Movie")
   }
+
+  case class MovieWithActors(movie: Movie, actors: List[Actor])
 
   case class Genre(
       id: Long,

@@ -47,6 +47,16 @@ class DataService(host: String) {
     )
   }
 
+  private def relationshipToPlayIn(rel: Relationship): PlayInMovie = {
+    val rm = rel.asMap
+    val character = rm.getOrDefault("character", "").asInstanceOf[String]
+    PlayInMovie(
+      rel.startNodeId,
+      if (character.isEmpty) None else Some(character),
+      rm.get("order").asInstanceOf[Long]
+    )
+  }
+
   private def actorsPathsToGraph(fPaths: Future[List[Paths]]) = {
     val paths = Await.result(fPaths, Duration.Inf)
 
@@ -314,37 +324,52 @@ class DataService(host: String) {
     actorsPathsToGraph(friendsQuery)
   }
 
-  def movies(tmdbIds: List[Long]): List[Movie] = {
+  def movies(tmdbIds: List[Long]): List[MovieWithActors] = {
     def moviesQuery = driver.readSession { session =>
       c"""
-        MATCH r=(g:Genre)<--(m:Movie)<-[pi]-(:Actor) MATCH (c:Country)--(m)
+        MATCH r=(g:Genre)<--(m:Movie)<-[pi]-(a:Actor) MATCH (c:Country)--(m)
         WHERE m.tmdbId IN $tmdbIds
-        RETURN m, collect(distinct g), collect(distinct c), collect(distinct pi)
+        RETURN m, collect(distinct a), collect(distinct g), collect(distinct c), collect(distinct pi)
       """
         .query[
-          (Movie, List[Genre], List[ProductionCountries], List[PlayInMovie])
+          (
+              Movie,
+              List[Node],
+              List[Genre],
+              List[ProductionCountries],
+              List[Relationship]
+          )
         ]
         .list(session)
     }
     Await
       .result(moviesQuery, Duration.Inf)
       .map {
-        case (m, gs, cs, pi) => {
-          Movie(
-            m.id,
-            m.tmdbId,
-            m.title,
-            m.overview,
-            m.budget,
-            m.revenue,
-            gs.sortWith(_.tmdbId < _.tmdbId),
-            Some(Credits(pi.sortWith(_.order < _.order))),
-            m.backdrop_path,
-            m.poster_path,
-            Some(cs.sortWith(_.iso_3166_1 < _.iso_3166_1)),
-            m.release_date,
-            m.runtime,
-            m.tagline
+        case (m, ns, gs, cs, pis) => {
+          MovieWithActors(
+            Movie(
+              m.id,
+              m.tmdbId,
+              m.title,
+              m.overview,
+              m.budget,
+              m.revenue,
+              gs.sortWith(_.tmdbId < _.tmdbId),
+              Some(
+                Credits(
+                  pis
+                    .map(pi => relationshipToPlayIn(pi))
+                    .sortWith(_.order < _.order)
+                )
+              ),
+              m.backdrop_path,
+              m.poster_path,
+              Some(cs.sortWith(_.iso_3166_1 < _.iso_3166_1)),
+              m.release_date,
+              m.runtime,
+              m.tagline
+            ),
+            ns.map(n => nodeToActor(n)).sortWith(_.degree < _.degree)
           )
         }
       }

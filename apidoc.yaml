@@ -207,7 +207,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Movie'
+                $ref: '#/components/schemas/MovieWithActors'
         '404':
           description: Not found
           content:
@@ -240,7 +240,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Movie'
+                  $ref: '#/components/schemas/MovieWithActors'
         '404':
           description: Not found
           content:
@@ -312,6 +312,9 @@ components:
           type: string
         deathday:
           type: string
+        degree:
+          type: integer
+          format: int64
         gender:
           type: string
         id:
@@ -367,6 +370,7 @@ components:
           type: string
         order:
           type: integer
+          format: int64
 
     Credits:
       type: object
@@ -452,3 +456,17 @@ components:
           type: string
         label:
           type: string
+
+    MovieWithActors:
+      type: object
+      properties:
+        actors:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/Actor'
+        movie:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Movie'
