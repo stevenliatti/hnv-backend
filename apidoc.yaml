@@ -155,7 +155,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Actors'
+                $ref: '#/components/schemas/ActorsGraph'
   /graph/friendsOf/{tmdbId}:
     get:
       tags:
@@ -192,7 +192,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Actors'
+                $ref: '#/components/schemas/ActorsGraph'
   /movie/{tmdbId}:
     get:
       tags:
@@ -248,6 +248,66 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MovieWithActors'
+        '404':
+          description: Not found
+          content:
+            text/plain:
+              example: Request is missing required query parameter 'tmdbIds'
+  /actor/{tmdbId}:
+    get:
+      tags:
+        - actors
+      summary: Single actor
+      description: Return actor from given tmdbId with basic infos, credits and genres
+      parameters:
+        - name: tmdbId
+          in: path
+          description: tmdbId
+          required: true
+          example: 65731
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: An actor with with relatives
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorWithRelative'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: actor not found
+  /actors:
+    get:
+      tags:
+        - actors
+      summary: Movies list
+      description: Return actors list from given tmdbIds with basic infos, credits and genres
+      parameters:
+        - name: tmdbIds
+          in: query
+          description: TMDb ids, separated by comma
+          required: true
+          schema:
+            type: string
+            example: 65731,10205
+      responses:
+        '200':
+          description: Movies list with basic infos, credits and genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActorWithRelative'
         '404':
           description: Not found
           content:
@@ -323,7 +383,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Actors'
+                $ref: '#/components/schemas/ActorsGraph'
         '400':
           description: Bad Request
           content:
@@ -478,7 +538,7 @@ components:
         tagline:
           type: string
 
-    Actors:
+    ActorsGraph:
       type: object
       properties:
         edges:
@@ -520,3 +580,75 @@ components:
           type: object
           allOf:
             - $ref: '#/components/schemas/Movie'
+
+    PlayInRelation:
+      type: object
+      properties:
+        source:
+          type: integer
+          format: int64
+        target:
+          type: integer
+          format: int64
+        character:
+          type: string
+        order:
+          type: integer
+          format: int64
+
+    KnownForRelation:
+      type: object
+      properties:
+        source:
+          type: integer
+          format: int64
+        target:
+          type: integer
+          format: int64
+        count:
+          type: integer
+          format: int64
+
+    ActorWithRelative:
+      type: object
+      properties:
+        actor:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Actor'
+        friends:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/Actor'
+        movies:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/Movie'
+        genres:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/Genre'
+        playInRelations:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/PlayInRelation'
+        knowsRelations:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/KnowsRelation'
+        knownForRelations:
+          type: array
+          items:
+            type: object
+            allOf:
+              - $ref: '#/components/schemas/KnownForRelation'

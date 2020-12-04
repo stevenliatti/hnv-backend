@@ -84,7 +84,7 @@ class Routes(val dataService: DataService)(implicit
               complete(
                 (
                   StatusCodes.OK,
-                  dataService.actors(
+                  dataService.actorsGraph(
                     limitMovie,
                     limitActor,
                     limitActorFriends,
@@ -120,8 +120,8 @@ class Routes(val dataService: DataService)(implicit
                 StatusCodes.OK,
                 (friends, friendsOfFriends) match {
                   case (Some(f), Some(ff)) =>
-                    dataService.friendsOf(tmdbId, f, ff)
-                  case _ => dataService.friendsOf(tmdbId, 20, 10)
+                    dataService.friendsOfGraph(tmdbId, f, ff)
+                  case _ => dataService.friendsOfGraph(tmdbId, 20, 10)
                 }
               )
             )
@@ -142,6 +142,23 @@ class Routes(val dataService: DataService)(implicit
           parameters("tmdbIds".as(CsvSeq[String])) { tmdbIds =>
             val longIds = tmdbIds.map(i => i.toLong).toList
             complete((StatusCodes.OK, dataService.movies(longIds)))
+          }
+        }
+      },
+      path("actor" / LongNumber) { tmdbId: Long =>
+        get {
+          dataService.actors(List(tmdbId)) match {
+            case h :: _ => complete((StatusCodes.OK, h))
+            case Nil =>
+              complete((StatusCodes.NotFound, Empty("actor not found")))
+          }
+        }
+      },
+      path("actors") {
+        get {
+          parameters("tmdbIds".as(CsvSeq[String])) { tmdbIds =>
+            val longIds = tmdbIds.map(i => i.toLong).toList
+            complete((StatusCodes.OK, dataService.actors(longIds)))
           }
         }
       },

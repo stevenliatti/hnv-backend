@@ -29,7 +29,7 @@ object JsonFormats {
     )
   }
 
-  implicit object MoviesJsonFormat extends RootJsonFormat[List[Movie]] {
+  object MoviesJsonFormat extends RootJsonFormat[List[Movie]] {
     override def read(json: JsValue): List[Movie] = ???
     override def write(obj: List[Movie]): JsValue = JsArray(
       obj.map(m => movieFormat.write(m))
@@ -78,6 +78,15 @@ object JsonFormats {
       case c: KnowsRelation     => knowsRelationFormat.write(c)
       case d: PlayInRelation    => playInRelationFormat.write(d)
     }
+  }
+
+  implicit val actorWithRelativeFormat = jsonFormat7(ActorWithRelative)
+  implicit object ActorsWithRelative
+      extends RootJsonFormat[List[ActorWithRelative]] {
+    override def read(json: JsValue): List[Domain.ActorWithRelative] = ???
+    override def write(obj: List[Domain.ActorWithRelative]): JsValue = JsArray(
+      obj.map(m => actorWithRelativeFormat.write(m))
+    )
   }
 
   implicit val relDataFormat = jsonFormat1(RelData)

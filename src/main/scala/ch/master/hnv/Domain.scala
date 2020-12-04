@@ -55,6 +55,15 @@ object Domain {
   }
 
   case class MovieWithActors(movie: Movie, actors: List[Actor])
+  case class ActorWithRelative(
+      actor: Actor,
+      friends: List[Actor],
+      movies: List[Movie],
+      genres: List[Genre],
+      playInRelations: List[PlayInRelation],
+      knowsRelations: List[KnowsRelation],
+      knownForRelations: List[KnownForRelation]
+  )
 
   case class Genre(
       id: Long,
@@ -83,10 +92,10 @@ object Domain {
       source: Long,
       target: Long,
       character: Option[String],
-      order: Int
+      order: Long
   ) extends Relation
 
-  case class KnownForRelation(source: Long, target: Long, count: Int)
+  case class KnownForRelation(source: Long, target: Long, count: Long)
       extends Relation
 
   case class BelongsToRelation(source: Long, target: Long) extends Relation

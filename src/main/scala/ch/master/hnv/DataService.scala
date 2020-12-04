@@ -215,7 +215,7 @@ class DataService(host: String) {
     }
   }
 
-  def actors(
+  def actorsGraph(
       limitMovie: Option[Int] = Some(5),
       limitActor: Option[Int] = Some(3),
       limitActorFriends: Option[Int] = Some(1),
@@ -298,7 +298,11 @@ class DataService(host: String) {
     actorsPathsToGraph(actorsQuery)
   }
 
-  def friendsOf(actorId: Long, friends: Int, friendsOfFriends: Int): Graph = {
+  def friendsOfGraph(
+      actorId: Long,
+      friends: Int,
+      friendsOfFriends: Int
+  ): Graph = {
 
     val f = if (friends > 30) 30 else friends
     val ff = if (friendsOfFriends > 15) 15 else friendsOfFriends
@@ -373,6 +377,83 @@ class DataService(host: String) {
               m.tagline
             ),
             ns.map(n => nodeToActor(n)).sortWith(_.degree < _.degree)
+          )
+        }
+      }
+  }
+
+  def actors(tmdbIds: List[Long]): List[ActorWithRelative] = {
+    def actorsQuery = driver.readSession { session =>
+      c"""
+        MATCH r=(m:Movie)<-[pi]-(a:Actor)-[k:KNOWS]-(friends:Actor) MATCH (g:Genre)-[kf]-(a)
+        WHERE a.tmdbId IN $tmdbIds
+        RETURN
+          a,
+          collect(distinct friends),
+          collect(distinct m),
+          collect(distinct g),
+          collect(distinct pi),
+          collect(distinct k),
+          collect(distinct kf)
+      """
+        .query[
+          (
+              Node,
+              List[Node],
+              List[Movie],
+              List[Genre],
+              List[Relationship],
+              List[Relationship],
+              List[Relationship]
+          )
+        ]
+        .list(session)
+    }
+    Await
+      .result(actorsQuery, Duration.Inf)
+      .map {
+        case (a, friends, m, g, pi, k, kf) => {
+          val neo4jRels = mutable.Map[PairIds, List[Long]]()
+          k.foreach(r => {
+            val pairIds = PairIds(r.startNodeId, r.endNodeId)
+            val movieId = r.asMap.get("movieId").asInstanceOf[Long]
+            if (neo4jRels.contains(pairIds)) {
+              neo4jRels.put(
+                pairIds,
+                movieId :: neo4jRels(pairIds)
+              )
+            } else {
+              neo4jRels.put(pairIds, List(movieId))
+            }
+          })
+
+          val knowsRelations = neo4jRels.map { case (pairIds, list) =>
+            KnowsRelation(pairIds.one, pairIds.another, list)
+          }.toList
+
+          ActorWithRelative(
+            nodeToActor(a),
+            friends.map(f => nodeToActor(f)),
+            m,
+            g,
+            pi.map(p =>
+              PlayInRelation(
+                p.startNodeId,
+                p.endNodeId,
+                if (p.asMap.containsKey("character"))
+                  Some(p.asMap.get("character").asInstanceOf[String])
+                else None,
+                p.asMap.get("order").asInstanceOf[Long]
+              )
+            ),
+            knowsRelations,
+            kf.map(p =>
+              KnownForRelation(
+                p.startNodeId,
+                p.endNodeId,
+                p.asMap.get("count").asInstanceOf[Long]
+              )
+            )
           )
         }
       }
