@@ -195,7 +195,10 @@ class DataService(host: String) {
   private def filterActorCountryOrigin(
       actorLabel: String,
       origin: Option[String]
-  ): Option[String] = None
+  ): Option[String] = origin match {
+    case Some(value) => Some(s"$actorLabel.place_of_birth CONTAINS '$value'")
+    case None        => None
+  }
 
   private def concatFilters(
       someQueries: List[Option[String]]
@@ -229,8 +232,8 @@ class DataService(host: String) {
       actorStartBirth: Option[String] = None,
       actorEndBirth: Option[String] = None,
       actorStartDeath: Option[String] = None,
-      actorEndDeath: Option[String] = None
-      // actorCountryOrigin: Option[String] = None,
+      actorEndDeath: Option[String] = None,
+      actorCountryOrigin: Option[String] = None
   ): Graph = {
 
     val lm = if (limitMovie.getOrElse(5) > 20) 20 else limitMovie.getOrElse(5)
@@ -253,8 +256,8 @@ class DataService(host: String) {
       List(
         filterActorGender("a", actorGender),
         filterActorBirth("a", actorStartBirth, actorEndBirth),
-        filterActorDeath("a", actorStartDeath, actorEndDeath)
-        // filterActorCountryOrigin("a", actorCountryOrigin)
+        filterActorDeath("a", actorStartDeath, actorEndDeath),
+        filterActorCountryOrigin("a", actorCountryOrigin)
       )
     )
 
@@ -262,8 +265,8 @@ class DataService(host: String) {
       List(
         filterActorGender("b", actorGender),
         filterActorBirth("b", actorStartBirth, actorEndBirth),
-        filterActorDeath("b", actorStartDeath, actorEndDeath)
-        // filterActorCountryOrigin("b", actorCountryOrigin)
+        filterActorDeath("b", actorStartDeath, actorEndDeath),
+        filterActorCountryOrigin("b", actorCountryOrigin)
       )
     )
 

@@ -58,8 +58,8 @@ class Routes(val dataService: DataService)(implicit
             "actorStartBirth".as[String].?,
             "actorEndBirth".as[String].?,
             "actorStartDeath".as[String].?,
-            "actorEndDeath".as[String].?
-            // "actorCountryOrigin".as[String].?
+            "actorEndDeath".as[String].?,
+            "actorCountryOrigin".as[String].?
           ) {
             (
                 limitMovie,
@@ -78,8 +78,8 @@ class Routes(val dataService: DataService)(implicit
                 actorStartBirth,
                 actorEndBirth,
                 actorStartDeath,
-                actorEndDeath
-                //actorCountryOrigin
+                actorEndDeath,
+                actorCountryOrigin
             ) =>
               complete(
                 (
@@ -101,8 +101,8 @@ class Routes(val dataService: DataService)(implicit
                     actorStartBirth,
                     actorEndBirth,
                     actorStartDeath,
-                    actorEndDeath
-                    //actorCountryOrigin
+                    actorEndDeath,
+                    actorCountryOrigin
                   )
                 )
               )
@@ -157,11 +157,18 @@ class Routes(val dataService: DataService)(implicit
           }
         }
       },
-      path("graph" / "shortestPath" / LongNumber / LongNumber) { (first, second) =>
-        get {
-          if (first != second) complete((StatusCodes.OK, dataService.shortestPath(first, second)))
-          else complete((StatusCodes.BadRequest, Empty("tmdbIds must be different")))
-        }
+      path("graph" / "shortestPath" / LongNumber / LongNumber) {
+        (first, second) =>
+          get {
+            if (first != second)
+              complete(
+                (StatusCodes.OK, dataService.shortestPath(first, second))
+              )
+            else
+              complete(
+                (StatusCodes.BadRequest, Empty("tmdbIds must be different"))
+              )
+          }
       }
     )
   }
