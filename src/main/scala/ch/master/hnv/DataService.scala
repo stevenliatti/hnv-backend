@@ -320,9 +320,9 @@ class DataService(host: String) {
           RETURN ff ORDER BY ff.degree DESC LIMIT $ff
         }
         WITH (collect(a.tmdbId) + collect(f.tmdbId) + collect(ff.tmdbId)) AS actorIds
-        MATCH (c)-[k:KNOWS]-()
-        WHERE c.tmdbId IN actorIds
-        RETURN collect(c) AS nodes, k AS rels
+        MATCH (c)-[k:KNOWS]-(d)
+        WHERE c.tmdbId IN actorIds AND d.tmdbId IN actorIds
+        RETURN DISTINCT (collect(c) + collect(d)) AS nodes, k AS rels
       """
         .query[Paths]
         .list(session)

@@ -3,6 +3,7 @@ WORKDIR /builder
 COPY project/*.sbt project/
 COPY project/build.properties project/
 COPY src src
+COPY apidoc.yaml .
 COPY build.sbt build.sbt
 RUN sbt compile assembly
 

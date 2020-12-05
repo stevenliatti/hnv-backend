@@ -179,7 +179,7 @@ paths:
           schema:
             type: integer
             default: 10
-        - name: limitfriendsOfFriendsActor
+        - name: friendsOfFriends
           in: query
           description: Optional, max 15 (actually)
           required: false
