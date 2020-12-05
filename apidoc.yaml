@@ -162,7 +162,7 @@ paths:
         - graph
         - actors
       summary: actors and friends graph
-      description: Returns actor, some "actors friends" and some "friends of friends" from given actor tmdbId
+      description: Returns actor, some "actors friends" and some "friends of friends" from given actor tmdbId. Order friends by KNOWS_COUNT with given actor
       parameters:
         - name: tmdbId
           in: path
