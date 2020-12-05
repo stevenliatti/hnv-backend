@@ -258,7 +258,7 @@ paths:
       tags:
         - actors
       summary: Single actor
-      description: Return actor from given tmdbId with basic infos, credits and genres
+      description: Return actor from given tmdbId with relatives
       parameters:
         - name: tmdbId
           in: path
@@ -270,7 +270,7 @@ paths:
             format: int64
       responses:
         '200':
-          description: An actor with with relatives
+          description: An actor with relatives
           content:
             application/json:
               schema:
@@ -289,8 +289,8 @@ paths:
     get:
       tags:
         - actors
-      summary: Movies list
-      description: Return actors list from given tmdbIds with basic infos, credits and genres
+      summary: Actors list
+      description: Return actors list from given tmdbIds with relatives
       parameters:
         - name: tmdbIds
           in: query
@@ -301,7 +301,7 @@ paths:
             example: 65731,10205
       responses:
         '200':
-          description: Movies list with basic infos, credits and genres
+          description: Actors list with relatives
           content:
             application/json:
               schema:

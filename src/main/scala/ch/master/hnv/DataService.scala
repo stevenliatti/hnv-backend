@@ -312,16 +312,16 @@ class DataService(host: String) {
         MATCH (a:Actor {tmdbId: $actorId})
         WITH a
         CALL {
-          WITH a MATCH (a)-[KNOWS]-(m)
-          RETURN m ORDER BY m.degree DESC LIMIT $f
+          WITH a MATCH (a)-[:KNOWS]-(f)
+          RETURN f ORDER BY f.degree DESC LIMIT $f
         }
         CALL {
-          WITH m MATCH (m)-[KNOWS]-(n)
-          RETURN n ORDER BY n.degree DESC LIMIT $ff
+          WITH f MATCH (f)-[:KNOWS]-(ff)
+          RETURN ff ORDER BY ff.degree DESC LIMIT $ff
         }
-        WITH (collect(a.tmdbId) + collect(m.tmdbId) + collect(n.tmdbId)) AS actorIds
-        MATCH (c)-[k:KNOWS]-(d)
-        WHERE c.tmdbId IN actorIds AND d.tmdbId IN actorIds
+        WITH (collect(a.tmdbId) + collect(f.tmdbId) + collect(ff.tmdbId)) AS actorIds
+        MATCH (c)-[k:KNOWS]-()
+        WHERE c.tmdbId IN actorIds
         RETURN collect(c) AS nodes, k AS rels
       """
         .query[Paths]
