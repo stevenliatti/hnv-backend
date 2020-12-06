@@ -596,4 +596,32 @@ class DataService(host: String) {
 
     Graph(hnvNodes, relations)
   }
+
+  def placesOfBirth: List[String] = {
+    def placesOfBirthQuery: Future[List[String]] =
+      driver.readSession { session =>
+        c"""
+          MATCH (a:Actor) RETURN DISTINCT a.place_of_birth
+        """.query[String].list(session)
+      }
+
+    Await
+      .result(placesOfBirthQuery, Duration.Inf)
+      .map(place =>
+        place
+          .split(",")
+          .toList
+          .last
+          .split("-")
+          .toList
+          .last
+          .split(",")
+          .toList
+          .last
+          .trim
+          .replaceAll("[\\[\\](),-.]", "")
+      )
+      .distinct
+      .sorted
+  }
 }

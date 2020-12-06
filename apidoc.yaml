@@ -417,6 +417,20 @@ paths:
                   message:
                     type: string
                     example: tmdbIds must be different
+  /placesOfBirth:
+    get:
+      summary: Get actors places of birth
+      description: Returns list of places of birth
+      responses:
+        '200':
+          description: A list of places of birth
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: USA
 components:
   schemas:
     KnowsRelation:

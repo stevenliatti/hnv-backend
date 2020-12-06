@@ -191,6 +191,12 @@ class Routes(val dataService: DataService)(implicit
                 (StatusCodes.BadRequest, Empty("tmdbIds must be different"))
               )
           }
+      },
+      path("placesOfBirth") {
+        get {
+          import spray.json.DefaultJsonProtocol._
+          complete((StatusCodes.OK, dataService.placesOfBirth))
+        }
       }
     )
   }
