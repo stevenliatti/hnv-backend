@@ -32,18 +32,38 @@ class DataService(host: String) {
       node.id,
       nm.get("tmdbId").asInstanceOf[Long],
       nm.get("name").asInstanceOf[String],
-      Some(nm.get("biography").asInstanceOf[String]),
-      Some(nm.get("birthday").asInstanceOf[String]),
-      Some(nm.get("deathday").asInstanceOf[String]),
+      Some(nm.getOrDefault("biography", "").asInstanceOf[String]),
+      Some(nm.getOrDefault("birthday", "").asInstanceOf[String]),
+      Some(nm.getOrDefault("deathday", "").asInstanceOf[String]),
       nm.get("gender").asInstanceOf[String],
-      Some(nm.get("place_of_birth").asInstanceOf[String]),
-      Some(nm.get("profile_path").asInstanceOf[String]),
+      Some(nm.getOrDefault("place_of_birth", "").asInstanceOf[String]),
+      Some(nm.getOrDefault("profile_path", "").asInstanceOf[String]),
       None,
       nm.get("knowsDegree").asInstanceOf[Long],
       nm.get("playInDegree").asInstanceOf[Long],
       nm.get("degree").asInstanceOf[Long],
       // TODO try with other communities if needed
       nm.get("knowsCommunityLouvain").asInstanceOf[Long]
+    )
+  }
+
+  private def nodeToMovie(node: Node): Movie = {
+    val nm = node.asMap
+    Movie(
+      node.id,
+      nm.get("tmdbId").asInstanceOf[Long],
+      nm.get("title").asInstanceOf[String],
+      nm.get("overview").asInstanceOf[String],
+      nm.get("budget").asInstanceOf[Long],
+      nm.get("revenue").asInstanceOf[Long],
+      Nil,
+      None,
+      Some(nm.getOrDefault("backdrop_path", "").asInstanceOf[String]),
+      Some(nm.getOrDefault("poster_path", "").asInstanceOf[String]),
+      None,
+      Some(nm.getOrDefault("release_date", "").asInstanceOf[String]),
+      Some(nm.getOrDefault("runtime", "").asInstanceOf[Long]),
+      Some(nm.getOrDefault("tagline", "").asInstanceOf[String])
     )
   }
 
@@ -57,34 +77,41 @@ class DataService(host: String) {
     )
   }
 
-  private def actorsPathsToGraph(fPaths: Future[List[Paths]]) = {
-    val paths = Await.result(fPaths, Duration.Inf)
+  private def relationshipsToKnowsRelation(
+      relationships: List[Relationship]
+  ): List[KnowsRelation] = {
+    val relsMap = mutable.Map[PairIds, List[Long]]()
 
-    val neo4jNodes = mutable.Set[Node]()
-    val neo4jRels = mutable.Map[PairIds, List[Long]]()
+    relationships.foreach(r => {
+      val pairIds = PairIds(r.startNodeId, r.endNodeId)
+      val movieId = r.asMap.get("movieId").asInstanceOf[Long]
 
-    paths.foreach(path => {
-      neo4jNodes.addAll(path.nodes)
-      val rel = path.rels
-      val pairIds = PairIds(rel.startNodeId, rel.endNodeId)
-      val movieId = rel.asMap.get("movieId").asInstanceOf[Long]
-      if (neo4jRels.contains(pairIds)) {
-        neo4jRels.put(
+      if (relsMap.contains(pairIds)) {
+        relsMap.put(
           pairIds,
-          movieId :: neo4jRels(pairIds)
+          movieId :: relsMap(pairIds)
         )
       } else {
-        neo4jRels.put(pairIds, List(movieId))
+        relsMap.put(pairIds, List(movieId))
       }
     })
 
-    val nodes = neo4jNodes
-      .map(node => HnvNode(nodeToActor(node)))
+    relsMap.map { case (pairIds, list) =>
+      KnowsRelation(pairIds.one, pairIds.another, list)
+    }.toList
+  }
+
+  private def actorsPathsToGraph(fPaths: Future[List[Paths]]) = {
+    val paths = Await.result(fPaths, Duration.Inf)
+
+    val nodes = paths
+      .flatMap(_.nodes)
+      .toSet
+      .map((node: Node) => HnvNode(nodeToActor(node)))
       .toList
 
-    val relationships = neo4jRels.map { case (pairIds, list) =>
-      RelData(KnowsRelation(pairIds.one, pairIds.another, list))
-    }.toList
+    val relationships =
+      relationshipsToKnowsRelation(paths.map(_.rels)).map(RelData(_))
 
     Graph(nodes, relationships)
   }
@@ -298,6 +325,77 @@ class DataService(host: String) {
     actorsPathsToGraph(actorsQuery)
   }
 
+  def movieGraph(tmdbId: Long): Graph = {
+    def movieQuery: Future[(List[Node], List[Relationship])] =
+      driver.readSession { session =>
+        c"""
+        MATCH
+          (g:Genre)<-[bt]-(m:Movie)<-[pli]-(a:Actor),
+          (c:Country)-[pri]-(m)
+        WHERE m.tmdbId = $tmdbId
+        RETURN (
+          collect(DISTINCT m) +
+          collect(DISTINCT a) +
+          collect(DISTINCT g) +
+          collect(DISTINCT c)
+        ) AS nodes,
+        (
+          collect(DISTINCT bt) +
+          collect(DISTINCT pli) +
+          collect(DISTINCT pri)
+        ) AS rels
+      """
+          .query[(List[Node], List[Relationship])]
+          .single(session)
+      }
+
+    val (nodes, relationships) = Await.result(movieQuery, Duration.Inf)
+
+    val hnvNodes = nodes
+      .map(node =>
+        node.labels.asScala.toList.head match {
+          case "Movie" => nodeToMovie(node)
+          case "Actor" => nodeToActor(node)
+          case "Genre" =>
+            Genre(
+              node.id,
+              node.asMap.get("tmdbId").asInstanceOf[Long],
+              node.asMap.get("name").asInstanceOf[String],
+              node.asMap.get("belongsToDegree").asInstanceOf[Long],
+              node.asMap.get("knownForDegree").asInstanceOf[Long],
+              node.asMap.get("degree").asInstanceOf[Long]
+            )
+          case "Country" =>
+            ProductionCountry(
+              node.asMap.get("iso_3166_1").asInstanceOf[String],
+              node.asMap.get("name").asInstanceOf[String]
+            )
+        }
+      )
+      .map(HnvNode(_))
+
+    val edges = relationships
+      .map(rel =>
+        rel.`type` match {
+          case "BELONGS_TO" => BelongsToRelation(rel.startNodeId, rel.endNodeId)
+          case "PLAY_IN" =>
+            PlayInRelation(
+              rel.startNodeId,
+              rel.endNodeId,
+              Some(
+                rel.asMap.getOrDefault("character", "").asInstanceOf[String]
+              ),
+              rel.asMap.get("order").asInstanceOf[Long]
+            )
+          case "PRODUCED_IN" =>
+            ProducedInRelation(rel.startNodeId, rel.endNodeId)
+        }
+      )
+      .map(RelData(_))
+
+    Graph(hnvNodes, edges)
+  }
+
   def friendsOfGraph(
       actorId: Long,
       friends: Int,
@@ -343,7 +441,7 @@ class DataService(host: String) {
               Movie,
               List[Node],
               List[Genre],
-              List[ProductionCountries],
+              List[ProductionCountry],
               List[Relationship]
           )
         ]
@@ -413,23 +511,7 @@ class DataService(host: String) {
       .result(actorsQuery, Duration.Inf)
       .map {
         case (a, friends, m, g, pi, k, kf) => {
-          val neo4jRels = mutable.Map[PairIds, List[Long]]()
-          k.foreach(r => {
-            val pairIds = PairIds(r.startNodeId, r.endNodeId)
-            val movieId = r.asMap.get("movieId").asInstanceOf[Long]
-            if (neo4jRels.contains(pairIds)) {
-              neo4jRels.put(
-                pairIds,
-                movieId :: neo4jRels(pairIds)
-              )
-            } else {
-              neo4jRels.put(pairIds, List(movieId))
-            }
-          })
-
-          val knowsRelations = neo4jRels.map { case (pairIds, list) =>
-            KnowsRelation(pairIds.one, pairIds.another, list)
-          }.toList
+          val knowsRelations = relationshipsToKnowsRelation(k)
 
           ActorWithRelative(
             nodeToActor(a),
@@ -510,24 +592,7 @@ class DataService(host: String) {
 
     val (nodes, relationships) = Await.result(shortestPathQuery, Duration.Inf)
     val hnvNodes = nodes.map(n => HnvNode(nodeToActor(n)))
-
-    val neo4jRels = mutable.Map[PairIds, List[Long]]()
-    relationships.foreach(r => {
-      val pairIds = PairIds(r.startNodeId, r.endNodeId)
-      val movieId = r.asMap.get("movieId").asInstanceOf[Long]
-      if (neo4jRels.contains(pairIds)) {
-        neo4jRels.put(
-          pairIds,
-          movieId :: neo4jRels(pairIds)
-        )
-      } else {
-        neo4jRels.put(pairIds, List(movieId))
-      }
-    })
-
-    val relations = neo4jRels.map { case (pairIds, list) =>
-      RelData(KnowsRelation(pairIds.one, pairIds.another, list))
-    }.toList
+    val relations = relationshipsToKnowsRelation(relationships).map(RelData(_))
 
     Graph(hnvNodes, relations)
   }

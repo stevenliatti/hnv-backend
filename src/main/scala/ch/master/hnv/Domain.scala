@@ -34,7 +34,7 @@ object Domain {
     override def classes: List[String] = List("Actor")
   }
 
-  case class ProductionCountries(iso_3166_1: String, name: String)
+  case class ProductionCountry(iso_3166_1: String, name: String) extends Data
   case class Movie(
       id: Long,
       tmdbId: Long,
@@ -46,9 +46,9 @@ object Domain {
       credits: Option[Credits],
       backdrop_path: Option[String],
       poster_path: Option[String],
-      production_countries: Option[List[ProductionCountries]],
+      production_countries: Option[List[ProductionCountry]],
       release_date: Option[String],
-      runtime: Option[Int],
+      runtime: Option[Long],
       tagline: Option[String]
   ) extends Data {
     override def classes: List[String] = List("Movie")
@@ -99,6 +99,7 @@ object Domain {
       extends Relation
 
   case class BelongsToRelation(source: Long, target: Long) extends Relation
+  case class ProducedInRelation(source: Long, target: Long) extends Relation
 
   case class Paths(nodes: List[Node], rels: Relationship)
 

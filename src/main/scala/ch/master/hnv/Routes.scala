@@ -128,6 +128,11 @@ class Routes(val dataService: DataService)(implicit
           }
         }
       },
+      path("graph" / "movie" / LongNumber) { tmdbId: Long =>
+        get {
+          complete((StatusCodes.OK, dataService.movieGraph(tmdbId)))
+        }
+      },
       path("movie" / LongNumber) { tmdbId: Long =>
         get {
           dataService.movies(List(tmdbId)) match {

@@ -17,7 +17,7 @@ object JsonFormats {
   implicit val genreFormat = jsonFormat6(Genre)
   implicit val playInMovieFormat = jsonFormat3(PlayInMovie)
   implicit val creditFormat = jsonFormat1(Credits)
-  implicit val productionCoutriesFormat = jsonFormat2(ProductionCountries)
+  implicit val productionCountryFormat = jsonFormat2(ProductionCountry)
   implicit val actorFormat = jsonFormat14(Actor)
   implicit val movieFormat = jsonFormat14(Movie)
   implicit val resultFormatFormat = jsonFormat3(ResultFormat)
@@ -57,9 +57,10 @@ object JsonFormats {
   implicit object PropertiesJsonFormat extends RootJsonFormat[Data] {
     def read(json: JsValue): Data = ???
     def write(obj: Data): JsValue = obj match {
-      case a: Actor => actorFormat.write(a)
-      case g: Genre => genreFormat.write(g)
-      case m: Movie => movieFormat.write(m)
+      case a: Actor             => actorFormat.write(a)
+      case g: Genre             => genreFormat.write(g)
+      case m: Movie             => movieFormat.write(m)
+      case p: ProductionCountry => productionCountryFormat.write(p)
     }
   }
 
@@ -69,14 +70,16 @@ object JsonFormats {
   implicit val playInRelationFormat = jsonFormat4(PlayInRelation)
   implicit val knownForRelationFormat = jsonFormat3(KnownForRelation)
   implicit val belongsToRelationFormat = jsonFormat2(BelongsToRelation)
+  implicit val producedInRelationFormat = jsonFormat2(ProducedInRelation)
 
   implicit object RelationJsonFormat extends RootJsonFormat[Relation] {
     def read(json: JsValue): Relation = ???
     def write(obj: Relation): JsValue = obj match {
-      case a: BelongsToRelation => belongsToRelationFormat.write(a)
-      case b: KnownForRelation  => knownForRelationFormat.write(b)
-      case c: KnowsRelation     => knowsRelationFormat.write(c)
-      case d: PlayInRelation    => playInRelationFormat.write(d)
+      case a: BelongsToRelation  => belongsToRelationFormat.write(a)
+      case b: KnownForRelation   => knownForRelationFormat.write(b)
+      case c: KnowsRelation      => knowsRelationFormat.write(c)
+      case d: PlayInRelation     => playInRelationFormat.write(d)
+      case e: ProducedInRelation => producedInRelationFormat.write(e)
     }
   }
 

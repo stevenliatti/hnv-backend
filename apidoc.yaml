@@ -156,6 +156,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActorsGraph'
+  /graph/movie/{tmdbId}:
+    get:
+      tags:
+        - graph
+        - movies
+      summary: movie graph
+      description: Returns movie with actors, genres and production countries as graph
+      parameters:
+        - name: tmdbId
+          in: path
+          description: tmdbId
+          required: true
+          example: 11
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: A movie with actors, genres and production countries. Cytoscape.js format compatible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieGraph'
   /graph/friendsOf/{tmdbId}:
     get:
       tags:
@@ -555,6 +578,24 @@ components:
             properties:
               data:
                 $ref: '#/components/schemas/Actor'
+
+    MovieGraph:
+      type: object
+      properties:
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: object
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: object
 
     SearchResults:
       type: object
