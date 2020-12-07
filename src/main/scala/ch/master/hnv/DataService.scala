@@ -329,22 +329,22 @@ class DataService(host: String) {
     def movieQuery: Future[(List[Node], List[Relationship])] =
       driver.readSession { session =>
         c"""
-        MATCH
-          (g:Genre)<-[bt]-(m:Movie)<-[pli]-(a:Actor),
-          (c:Country)-[pri]-(m)
-        WHERE m.tmdbId = $tmdbId
-        RETURN (
-          collect(DISTINCT m) +
-          collect(DISTINCT a) +
-          collect(DISTINCT g) +
-          collect(DISTINCT c)
-        ) AS nodes,
-        (
-          collect(DISTINCT bt) +
-          collect(DISTINCT pli) +
-          collect(DISTINCT pri)
-        ) AS rels
-      """
+          MATCH
+            (g:Genre)<-[bt]-(m:Movie)<-[pli]-(a:Actor),
+            (c:Country)-[pri]-(m)
+          WHERE m.tmdbId = $tmdbId
+          RETURN (
+            collect(DISTINCT m) +
+            collect(DISTINCT a) +
+            collect(DISTINCT g) +
+            collect(DISTINCT c)
+          ) AS nodes,
+          (
+            collect(DISTINCT bt) +
+            collect(DISTINCT pli) +
+            collect(DISTINCT pri)
+          ) AS rels
+        """
           .query[(List[Node], List[Relationship])]
           .single(session)
       }
@@ -367,6 +367,7 @@ class DataService(host: String) {
             )
           case "Country" =>
             ProductionCountry(
+              node.id,
               node.asMap.get("iso_3166_1").asInstanceOf[String],
               node.asMap.get("name").asInstanceOf[String]
             )

@@ -527,9 +527,12 @@ components:
           items:
             $ref: '#/components/schemas/PlayInMovie'
 
-    ProductionCountries:
+    ProductionCountry:
       type: object
       properties:
+        id:
+          type: integer
+          format: int64
         iso_3166_1:
           type: string
         name:
@@ -567,7 +570,7 @@ components:
         production_countries:
           type: array
           items:
-            $ref: '#/components/schemas/ProductionCountries'
+            $ref: '#/components/schemas/ProductionCountry'
         release_date:
           type: string
         runtime:

@@ -34,7 +34,8 @@ object Domain {
     override def classes: List[String] = List("Actor")
   }
 
-  case class ProductionCountry(iso_3166_1: String, name: String) extends Data
+  case class ProductionCountry(id: Long, iso_3166_1: String, name: String)
+      extends Data
   case class Movie(
       id: Long,
       tmdbId: Long,

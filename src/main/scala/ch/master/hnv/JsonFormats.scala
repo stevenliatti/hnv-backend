@@ -17,7 +17,7 @@ object JsonFormats {
   implicit val genreFormat = jsonFormat6(Genre)
   implicit val playInMovieFormat = jsonFormat3(PlayInMovie)
   implicit val creditFormat = jsonFormat1(Credits)
-  implicit val productionCountryFormat = jsonFormat2(ProductionCountry)
+  implicit val productionCountryFormat = jsonFormat3(ProductionCountry)
   implicit val actorFormat = jsonFormat14(Actor)
   implicit val movieFormat = jsonFormat14(Movie)
   implicit val resultFormatFormat = jsonFormat3(ResultFormat)
