@@ -43,7 +43,7 @@ class DataService(host: String) {
       nm.get("playInDegree").asInstanceOf[Long],
       nm.get("degree").asInstanceOf[Long],
       // TODO try with other communities if needed
-      nm.get("knowsCommunityLouvain").asInstanceOf[Long]
+      nm.get("knowsCommunityModularityOptimization").asInstanceOf[Long]
     )
   }
 

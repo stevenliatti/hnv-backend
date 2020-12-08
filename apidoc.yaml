@@ -469,6 +469,7 @@ components:
           format: int64
         knowsCommunity:
           type: integer
+          description: Computed with Modularity Optimization community algorithm
           format: int64
         knowsDegree:
           type: integer
