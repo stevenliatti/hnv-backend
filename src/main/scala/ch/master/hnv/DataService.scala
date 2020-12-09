@@ -587,7 +587,9 @@ class DataService(host: String) {
           (a1:Actor {tmdbId: $actorId1}),
           (a2:Actor {tmdbId: $actorId2}),
           p = shortestPath((a1)-[:KNOWS*]-(a2))
-          RETURN nodes(p) as nodes, relationships(p) as relationships
+          WITH nodes(p) AS n
+          MATCH (a:Actor)-[k:KNOWS]-(b:Actor) WHERE a IN n AND b IN n
+          RETURN collect(DISTINCT a) AS nodes, collect(DISTINCT k) AS relationships
         """.query[(List[Node], List[Relationship])].single(session)
       }
 
